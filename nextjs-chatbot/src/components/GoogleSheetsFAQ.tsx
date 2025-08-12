@@ -12,11 +12,10 @@ export default function GoogleSheetsFAQ() {
   const [faqCount, setFaqCount] = useState({ 블로거: 0, 광고주: 0, total: 0 })
 
   useEffect(() => {
-    // 저장된 Google Sheets URL 불러오기
-    const savedUrl = localStorage.getItem('googleSheetsUrl')
-    if (savedUrl) {
-      setSheetUrl(savedUrl)
-    }
+    // 고정된 Google Sheets URL 설정
+    const fixedUrl = 'https://docs.google.com/spreadsheets/d/1QyimFEo-B9-5Nxt4OwWemAUr7aT6xxX0LGKGwSE0UDA/edit?gid=0#gid=0'
+    setSheetUrl(fixedUrl)
+    localStorage.setItem('googleSheetsUrl', fixedUrl)
     
     // 초기 상태 로드
     loadSyncStatus()
@@ -74,7 +73,7 @@ export default function GoogleSheetsFAQ() {
     }
   }
 
-  const templateUrl = 'https://docs.google.com/spreadsheets/d/1EXAMPLE_SHEET_ID/edit#gid=0'
+  const templateUrl = 'https://docs.google.com/spreadsheets/d/1QyimFEo-B9-5Nxt4OwWemAUr7aT6xxX0LGKGwSE0UDA/edit?gid=0#gid=0'
 
   return (
     <div className="space-y-6">
@@ -87,27 +86,38 @@ export default function GoogleSheetsFAQ() {
         <div className="space-y-4">
           {/* 안내 메시지 */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">사용 방법</h3>
-            <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-              <li>Google Sheets에서 FAQ 템플릿을 복사합니다</li>
-              <li>시트에 FAQ 데이터를 입력합니다 (블로거/광고주 시트 구분)</li>
-              <li>시트를 "링크가 있는 모든 사용자에게 공개"로 설정합니다</li>
-              <li>시트 URL을 아래에 입력하고 동기화 버튼을 클릭합니다</li>
-            </ol>
-            <div className="mt-3">
+            <h3 className="font-semibold text-blue-900 mb-2">슈퍼멤버스 FAQ Google Sheets 연동</h3>
+            <div className="text-sm text-blue-800 space-y-2">
+              <p className="font-medium">📊 공식 FAQ 시트:</p>
               <a 
                 href={templateUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 underline text-sm"
+                className="inline-flex items-center px-4 py-2 bg-white border border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
               >
-                FAQ 템플릿 시트 보기 →
+                <FileSpreadsheet className="h-4 w-4 mr-2 text-blue-600" />
+                <span className="text-blue-700 font-medium">슈퍼멤버스 FAQ 시트 열기</span>
               </a>
+              
+              <div className="mt-4 pt-3 border-t border-blue-200">
+                <p className="font-medium mb-2">✅ 시트 구성:</p>
+                <ul className="space-y-1 ml-4">
+                  <li>• <strong>블로거</strong> 시트: 블로거 관련 FAQ</li>
+                  <li>• <strong>광고주</strong> 시트: 광고주 관련 FAQ</li>
+                  <li>• 열 구성: A(질문) | B(답변) | C(타입)</li>
+                </ul>
+              </div>
+
+              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="text-yellow-800">
+                  <strong>주의:</strong> FAQ 수정은 Google Sheets에서 직접 하시고, 여기서는 동기화만 하세요.
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* URL 입력 필드 */}
-          <div>
+          {/* URL 입력 필드 - 숨김 처리 */}
+          <div className="hidden">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Google Sheets URL
             </label>
@@ -131,6 +141,18 @@ export default function GoogleSheetsFAQ() {
                 동기화
               </button>
             </div>
+          </div>
+
+          {/* 동기화 버튼 */}
+          <div className="flex justify-center">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-lg font-medium"
+            >
+              <RefreshCw className={`h-5 w-5 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+              FAQ 데이터 동기화
+            </button>
           </div>
 
           {/* 상태 메시지 */}
@@ -173,15 +195,6 @@ export default function GoogleSheetsFAQ() {
             )}
           </div>
 
-          {/* 시트 형식 안내 */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-semibold text-yellow-900 mb-2">시트 형식</h4>
-            <div className="text-sm text-yellow-800 space-y-2">
-              <p>• 시트명: "블로거", "광고주"</p>
-              <p>• 열 구성: A열(질문) | B열(답변) | C열(타입)</p>
-              <p>• 타입: "매장", "제품", "매장,제품" 중 선택</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import ChatInterface from '@/components/ChatInterface'
-import ModelConfig from '@/components/ModelConfig'
 import CostAnalysis from '@/components/CostAnalysis'
 import BatchTesting from '@/components/BatchTesting'
 import FAQUploader from '@/components/FAQUploader'
@@ -20,10 +19,9 @@ export default function Home() {
 
   const tabs = [
     { id: 'chat', label: '챗봇 테스트' },
-    { id: 'config', label: 'API 설정' },
     { id: 'cost', label: '비용 분석' },
     { id: 'batch', label: '일괄 테스트' },
-    { id: 'faq', label: 'FAQ 업로드' },
+    { id: 'faq', label: 'FAQ 시트 연동' },
     { id: 'prompts', label: '프롬프트 관리' }
   ]
 
@@ -58,9 +56,6 @@ export default function Home() {
 
           <div className="p-6">
             {activeTab === 'chat' && <ChatInterface apiKeys={apiKeys} />}
-            {activeTab === 'config' && (
-              <ModelConfig apiKeys={apiKeys} onSave={setApiKeys} />
-            )}
             {activeTab === 'cost' && <CostAnalysis />}
             {activeTab === 'batch' && <BatchTesting apiKeys={apiKeys} />}
             {activeTab === 'faq' && <GoogleSheetsFAQ />}
