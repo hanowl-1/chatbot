@@ -65,14 +65,14 @@ export async function POST(request: NextRequest) {
       tokensUsed = completion.usage?.total_tokens || 0
     } else if (model.startsWith('claude')) {
       const anthropic = new Anthropic({ apiKey: api_key })
-      const completion = await anthropic.messages.create({
+      const completion = await anthropic.completions.create({
         model: model,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: message }],
+        prompt: `${systemPrompt}\n\nHuman: ${message}\n\nAssistant:`,
         temperature,
-        max_tokens
+        max_tokens_to_sample: max_tokens,
+        stop_sequences: ["\n\nHuman:"]
       })
-      response = completion.content[0].type === 'text' ? completion.content[0].text : ''
+      response = completion.completion
       tokensUsed = Math.ceil((systemPrompt.length + message.length + response.length) / 4)
     } else if (model.startsWith('gemini')) {
       const genAI = new GoogleGenerativeAI(api_key)
