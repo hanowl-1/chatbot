@@ -1,0 +1,10 @@
+[build]
+  command = "npm install && npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  GOOGLE_SHEETS_API_KEY = "AIzaSyBbMhEE9cHTDyBrm5VQgNBnuwAq7-qAplk"
+  NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY = "AIzaSyBbMhEE9cHTDyBrm5VQgNBnuwAq7-qAplk"
