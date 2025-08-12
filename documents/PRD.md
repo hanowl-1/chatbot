@@ -102,9 +102,11 @@ SO THAT 다양한 시나리오에서의 정확도를 검증할 수 있다
 - **설명**: 슈퍼멤버스 고유 FAQ 데이터 업로드 및 관리
 - **상세 기능**:
   - JSON 형식 FAQ 파일 업로드
+  - Google Sheets 연동을 통한 실시간 FAQ 관리
   - 블로거/광고주별 FAQ 분류
   - FAQ 데이터 실시간 갱신
   - 데이터 유효성 검증
+  - 홈페이지 헤더의 빠른 동기화 버튼
 
 #### 5.1.3 모델 설정 관리
 - **설명**: AI 모델별 API 키 및 파라미터 설정
@@ -137,6 +139,14 @@ SO THAT 다양한 시나리오에서의 정확도를 검증할 수 있다
   - 비용 최적화 제안
   - 상세 비용 브레이크다운
 
+#### 5.1.7 프롬프트 관리
+- **설명**: 시스템 프롬프트 관리 및 버전 관리
+- **상세 기능**:
+  - 프롬프트 편집기 UI
+  - 버전 관리 및 히스토리
+  - 실시간 프롬프트 업데이트
+  - 프롬프트 데이터는 `/data/prompts.json`에 저장
+
 ### 5.2 부가 기능
 
 #### 5.2.1 응답 품질 평가
@@ -157,29 +167,31 @@ SO THAT 다양한 시나리오에서의 정확도를 검증할 수 있다
 ## 6. 기술 스택
 
 ### 6.1 백엔드
-- **프레임워크**: FastAPI (Python 3.9+)
-- **비동기 처리**: asyncio, httpx
-- **WebSocket**: FastAPI WebSocket
+- **프레임워크**: Next.js API Routes (App Router)
+- **언어**: TypeScript
 - **AI SDK**:
-  - OpenAI Python SDK
-  - Anthropic Python SDK
+  - OpenAI SDK
+  - Anthropic SDK
   - Google Generative AI SDK
+- **Google Sheets 연동**: googleapis npm 패키지
 
 ### 6.2 프론트엔드
-- **프레임워크**: React 18 + TypeScript
-- **UI 라이브러리**: Material-UI (MUI)
+- **프레임워크**: Next.js 14 + React 18 + TypeScript
+- **UI 라이브러리**: Tailwind CSS
 - **상태 관리**: React Hooks
 - **HTTP 클라이언트**: Axios
-- **WebSocket**: Native WebSocket API
+- **파일 업로드**: react-dropzone
 
 ### 6.3 데이터 저장
-- **FAQ 데이터**: JSON 파일 (로컬 파일시스템)
+- **FAQ 데이터**: `/data/processed_qna.json` (Google Sheets 동기화)
+- **프롬프트 데이터**: `/data/prompts.json`
 - **테스트 결과**: 메모리 저장 (향후 DB 마이그레이션 예정)
+- **Google Sheets URL**: 브라우저 localStorage
 
 ### 6.4 배포 환경
-- **백엔드**: Uvicorn ASGI 서버
-- **프론트엔드**: Node.js 개발 서버
-- **포트**: 백엔드 8000, 프론트엔드 3000
+- **통합 서버**: Next.js 서버 (API Routes + SSR)
+- **포트**: 3000 (개발), 3001 (포트 충돌 시)
+- **환경 변수**: `.env.local` 파일
 
 ## 7. API 명세
 
@@ -195,6 +207,15 @@ POST /api/upload-faq
 GET /api/faq-data
 - 설명: 현재 FAQ 데이터 조회
 - Response: {data, count}
+
+POST /api/google-sheets-sync
+- 설명: Google Sheets에서 FAQ 데이터 동기화
+- Request: {sheetUrl: string}
+- Response: {success, message, data: {블로거, 광고주, total}}
+
+GET /api/google-sheets-sync
+- 설명: 동기화 상태 조회
+- Response: {lastSync, count}
 ```
 
 #### 7.1.2 채팅 API
@@ -215,6 +236,15 @@ POST /api/batch-test
 - 설명: 배치 테스트 실행
 - Request: {test_queries[], models[], api_config}
 - Response: {results[], summary}
+
+GET /api/prompts
+- 설명: 시스템 프롬프트 조회
+- Response: {systemPrompt, lastModified, version}
+
+PUT /api/prompts
+- 설명: 시스템 프롬프트 업데이트
+- Request: {systemPrompt: string}
+- Response: {message, data: {systemPrompt, lastModified, version}}
 ```
 
 #### 7.1.4 비용 분석
@@ -314,9 +344,12 @@ interface TestResult {
 - ✅ 기본 채팅 인터페이스
 - ✅ 다중 모델 지원
 - ✅ FAQ 업로드 기능
+- ✅ Google Sheets FAQ 연동
 - ✅ 실시간 성능 분석
 - ✅ 배치 테스트
 - ✅ 비용 추정기
+- ✅ 프롬프트 관리 시스템
+- ✅ 홈페이지 빠른 동기화 버튼
 
 ### Phase 2 (3개월)
 - 사용자 인증 시스템
@@ -370,3 +403,34 @@ interface TestResult {
 - **부정확한 응답**: 지속적인 FAQ 업데이트 및 검증
 - **사용자 채택 저조**: 교육 프로그램 및 온보딩 개선
 - **경쟁 솔루션 출현**: 차별화 기능 지속 개발
+
+## 14. Google Sheets FAQ 연동 가이드
+
+### 14.1 개요
+CX매니저가 비개발자 친화적인 방식으로 FAQ를 관리할 수 있도록 Google Sheets 연동 기능을 제공합니다.
+
+### 14.2 사용 방법
+1. **Google Sheets 템플릿 준비**
+   - 시트 구성: "블로거", "광고주" 시트
+   - 열 구성: A(질문) | B(답변) | C(타입)
+   - 타입 옵션: "매장", "제품", "매장,제품"
+
+2. **시트 공유 설정**
+   - "링크가 있는 모든 사용자에게" 뷰어 권한 부여
+   - 시트 URL 복사
+
+3. **시스템 연동**
+   - FAQ 업로드 탭에서 Google Sheets URL 입력
+   - "동기화" 버튼 클릭으로 데이터 가져오기
+   - 홈페이지 헤더의 "FAQ 동기화" 버튼으로 빠른 동기화
+
+### 14.3 기술 구현
+- Google Sheets API 사용 (API Key 인증)
+- 실시간 데이터 동기화
+- 로컬 스토리지에 URL 저장
+- `/data/processed_qna.json` 파일로 저장
+
+### 14.4 환경 설정
+```
+GOOGLE_SHEETS_API_KEY=your_api_key_here
+```
