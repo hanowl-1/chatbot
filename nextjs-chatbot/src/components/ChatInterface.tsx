@@ -29,6 +29,7 @@ const MODELS = [
   { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet', provider: 'anthropic' },
   { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku', provider: 'anthropic' },
   { value: 'gemini-pro', label: 'Gemini Pro', provider: 'google' },
+  { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash', provider: 'google' },
 ]
 
 export default function ChatInterface({ apiKeys }: ChatInterfaceProps) {

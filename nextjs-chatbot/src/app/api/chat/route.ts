@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
       tokensUsed = Math.ceil((systemPrompt.length + message.length + response.length) / 4)
     } else if (model.startsWith('gemini')) {
       const genAI = new GoogleGenerativeAI(api_key)
-      const genModel = genAI.getGenerativeModel({ model: model })
+      const modelName = model === 'gemini-2.0-flash-exp' ? 'gemini-2.0-flash-exp' : model
+      const genModel = genAI.getGenerativeModel({ model: modelName })
       const result = await genModel.generateContent(`${systemPrompt}\n\nUser: ${message}`)
       response = result.response.text()
       tokensUsed = Math.ceil((systemPrompt.length + message.length + response.length) / 4)

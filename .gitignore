@@ -41,7 +41,6 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
-dev.env
 # Build
 build/
 dist/

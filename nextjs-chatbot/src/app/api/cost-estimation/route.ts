@@ -7,7 +7,8 @@ const PRICING = {
   'claude-3-opus': { input: 0.015, output: 0.075 },
   'claude-3-sonnet': { input: 0.003, output: 0.015 },
   'claude-3-haiku': { input: 0.00025, output: 0.00125 },
-  'gemini-pro': { input: 0.0005, output: 0.0015 }
+  'gemini-pro': { input: 0.0005, output: 0.0015 },
+  'gemini-2.0-flash': { input: 0.0001, output: 0.0004 }
 }
 
 export async function GET(request: NextRequest) {
