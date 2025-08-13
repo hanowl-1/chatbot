@@ -84,6 +84,9 @@ export async function POST(request: NextRequest) {
       const apiKey = api_key || process.env.GOOGLE_API_KEY
       if (!apiKey) throw new Error('Google API key not provided. Please check environment variables.')
       
+      // Debug log for Netlify
+      console.log('Gemini API Key exists:', !!apiKey)
+      
       const genAI = new GoogleGenerativeAI(apiKey)
       const modelName = model === 'gemini-2.0-flash-exp' ? 'gemini-2.0-flash-exp' : model
       const genModel = genAI.getGenerativeModel({ model: modelName })
