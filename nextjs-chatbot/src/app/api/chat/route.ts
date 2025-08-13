@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       tokensUsed = Math.ceil((systemPrompt.length + message.length + response.length) / 4)
     } else if (model.startsWith('gemini')) {
       const apiKey = api_key || process.env.GOOGLE_API_KEY
-      if (!apiKey) throw new Error('Google API key not provided')
+      if (!apiKey) throw new Error('Google API key not provided. Please check environment variables.')
       
       const genAI = new GoogleGenerativeAI(apiKey)
       const modelName = model === 'gemini-2.0-flash-exp' ? 'gemini-2.0-flash-exp' : model
