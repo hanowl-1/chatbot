@@ -13,6 +13,18 @@
 
 ## 설치 및 실행
 
+### 1. 환경 변수 설정
+```bash
+# .env.example을 env.local로 복사
+cp .env.example env.local
+
+# env.local 파일을 열어 API 키 입력
+# OPENAI_API_KEY=your_actual_api_key_here
+# ANTHROPIC_API_KEY=your_actual_api_key_here
+# GOOGLE_API_KEY=your_actual_api_key_here
+```
+
+### 2. 의존성 설치 및 실행
 ```bash
 # 의존성 설치
 npm install
