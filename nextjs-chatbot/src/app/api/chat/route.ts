@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now()
 
     if (model.startsWith('gpt')) {
-      const openai = new OpenAI({ apiKey: api_key })
+      const apiKey = api_key || process.env.OPENAI_API_KEY
+      if (!apiKey) throw new Error('OpenAI API key not provided')
+      
+      const openai = new OpenAI({ apiKey })
       const completion = await openai.chat.completions.create({
         model: model,
         messages: [
@@ -64,7 +67,10 @@ export async function POST(request: NextRequest) {
       response = completion.choices[0].message.content || ''
       tokensUsed = completion.usage?.total_tokens || 0
     } else if (model.startsWith('claude')) {
-      const anthropic = new Anthropic({ apiKey: api_key })
+      const apiKey = api_key || process.env.ANTHROPIC_API_KEY
+      if (!apiKey) throw new Error('Anthropic API key not provided')
+      
+      const anthropic = new Anthropic({ apiKey })
       const completion = await anthropic.completions.create({
         model: model,
         prompt: `${systemPrompt}\n\nHuman: ${message}\n\nAssistant:`,
@@ -75,7 +81,10 @@ export async function POST(request: NextRequest) {
       response = completion.completion
       tokensUsed = Math.ceil((systemPrompt.length + message.length + response.length) / 4)
     } else if (model.startsWith('gemini')) {
-      const genAI = new GoogleGenerativeAI(api_key)
+      const apiKey = api_key || process.env.GOOGLE_API_KEY
+      if (!apiKey) throw new Error('Google API key not provided')
+      
+      const genAI = new GoogleGenerativeAI(apiKey)
       const modelName = model === 'gemini-2.0-flash-exp' ? 'gemini-2.0-flash-exp' : model
       const genModel = genAI.getGenerativeModel({ model: modelName })
       const result = await genModel.generateContent(`${systemPrompt}\n\nUser: ${message}`)
