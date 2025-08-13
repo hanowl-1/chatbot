@@ -50,15 +50,24 @@ npm install
 ```
 
 3. 환경 변수 설정
-`.env.local` 파일을 생성하고 다음 내용을 추가:
+```bash
+# .env.example을 .env.local로 복사
+cp .env.example .env.local
+```
+
+`.env.local` 파일을 열어 API 키를 입력:
 ```env
 # API Keys
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GOOGLE_API_KEY=your_google_gemini_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
+TOGETHER_API_KEY=your_together_api_key_here
 
-# Google Services
-GOOGLE_SHEETS_API_KEY=your_google_sheets_api_key_here
+# Google Sheets (선택사항 - FAQ 동기화용)
+GOOGLE_SHEETS_CLIENT_EMAIL=your_service_account_email
+GOOGLE_SHEETS_PRIVATE_KEY=your_private_key_here
+GOOGLE_SHEETS_SPREADSHEET_ID=your_spreadsheet_id_here
 ```
 
 4. 개발 서버 실행
@@ -149,6 +158,17 @@ chatbot/
 
 ## 🚀 배포
 
+### Netlify 배포
+
+1. GitHub 저장소를 Netlify와 연결
+2. 빌드 설정은 자동으로 `netlify.toml` 파일을 참조
+3. 환경 변수 설정 (Site settings → Environment variables):
+   - `OPENAI_API_KEY`
+   - `ANTHROPIC_API_KEY`
+   - `GOOGLE_API_KEY`
+   - 기타 필요한 API 키들
+
+### 기타 플랫폼
 배포 시 환경 변수를 설정해야 합니다. 각 플랫폼의 환경 변수 설정 방법을 참고하세요.
 
 ## 🤝 기여하기
