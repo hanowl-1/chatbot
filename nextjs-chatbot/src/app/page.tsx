@@ -1,16 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import ChatInterface from '@/components/ChatInterface'
-import CostAnalysis from '@/components/CostAnalysis'
-import BatchTesting from '@/components/BatchTesting'
-import FAQUploader from '@/components/FAQUploader'
-import GoogleSheetsFAQ from '@/components/GoogleSheetsFAQ'
 import PromptsPage from '@/app/prompts/page'
-import QuickSyncButton from '@/components/QuickSyncButton'
+import RAGTesterNew from '@/components/RAGTesterNew'
+import Settings from '@/components/Settings'
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('chat')
+  const [activeTab, setActiveTab] = useState('rag')
+  const [ragMessages, setRagMessages] = useState<any[]>([])
   const [apiKeys, setApiKeys] = useState({
     openai: '',
     anthropic: '',
@@ -18,19 +15,16 @@ export default function Home() {
   })
 
   const tabs = [
-    { id: 'chat', label: '챗봇 테스트' },
-    { id: 'cost', label: '비용 분석' },
-    { id: 'batch', label: '일괄 테스트' },
-    { id: 'faq', label: 'FAQ 시트 연동' },
-    { id: 'prompts', label: '프롬프트 관리' }
+    { id: 'rag', label: 'RAG 테스터' },
+    { id: 'prompts', label: '프롬프트 관리' },
+    { id: 'settings', label: '설정' }
   ]
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-blue-600 text-white">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">슈퍼멤버스 FAQ 챗봇 테스터</h1>
-          <QuickSyncButton />
+        <div className="container mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold">슈퍼멤버스 RAG 시스템</h1>
         </div>
       </header>
 
@@ -55,11 +49,9 @@ export default function Home() {
           </div>
 
           <div className="p-6">
-            {activeTab === 'chat' && <ChatInterface apiKeys={apiKeys} />}
-            {activeTab === 'cost' && <CostAnalysis />}
-            {activeTab === 'batch' && <BatchTesting apiKeys={apiKeys} />}
-            {activeTab === 'faq' && <GoogleSheetsFAQ />}
+            {activeTab === 'rag' && <RAGTesterNew messages={ragMessages} setMessages={setRagMessages} />}
             {activeTab === 'prompts' && <PromptsPage />}
+            {activeTab === 'settings' && <Settings />}
           </div>
         </div>
       </main>
