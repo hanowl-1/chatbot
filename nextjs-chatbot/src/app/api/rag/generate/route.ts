@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      throw new Error(`RAG API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("RAG API Error Response:", errorText);
+      throw new Error(`RAG API error: ${response.statusText} - ${errorText}`);
     }
 
     const result = await response.json();

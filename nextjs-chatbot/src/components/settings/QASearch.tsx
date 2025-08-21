@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Search, Sparkles, Plus } from "lucide-react";
-import { fetchInstance } from "@/lib/rag-client-simple";
+import { fetchInstance } from "@/lib/fetchInstance";
 
 interface QAItem {
   id: string;
@@ -195,10 +195,12 @@ export default function QASearch({
                   </label>
                   <textarea
                     value={aiGeneratedQA.question}
-                    onChange={(e) => setAiGeneratedQA({
-                      ...aiGeneratedQA,
-                      question: e.target.value
-                    })}
+                    onChange={(e) =>
+                      setAiGeneratedQA({
+                        ...aiGeneratedQA,
+                        question: e.target.value,
+                      })
+                    }
                     className="mt-1 w-full p-2 bg-white rounded border border-purple-200 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     rows={2}
                   />
@@ -209,10 +211,12 @@ export default function QASearch({
                   </label>
                   <textarea
                     value={aiGeneratedQA.answer}
-                    onChange={(e) => setAiGeneratedQA({
-                      ...aiGeneratedQA,
-                      answer: e.target.value
-                    })}
+                    onChange={(e) =>
+                      setAiGeneratedQA({
+                        ...aiGeneratedQA,
+                        answer: e.target.value,
+                      })
+                    }
                     className="mt-1 w-full p-2 bg-white rounded border border-purple-200 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent whitespace-pre-wrap"
                     rows={5}
                   />

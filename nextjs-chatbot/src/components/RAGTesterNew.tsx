@@ -10,6 +10,7 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
+import { fetchInstance } from "@/lib/fetchInstance";
 
 // AI 모델 목록
 const MODELS = [
@@ -17,6 +18,7 @@ const MODELS = [
   { value: "gemini-2.5-flash", label: "Gemini Flash 2.5", provider: "google" },
   { value: "gpt-4.1", label: "GPT-4.1", provider: "openai" },
   { value: "gpt-4o", label: "GPT-4o", provider: "openai" },
+  { value: "gpt-5-mini", label: "GPT-5-mini", provider: "openai" },
   { value: "gpt-5", label: "GPT-5", provider: "openai" },
 ];
 
@@ -74,8 +76,7 @@ export default function RAGTesterNew({
   const fetchQADetail = async (qaId: string) => {
     console.log("Fetching QA detail for ID:", qaId);
     try {
-      const response = await fetch(`/api/rag/${qaId}`);
-      const data = await response.json();
+      const data = await fetchInstance(`/qa/${qaId}`);
 
       const qaMessage: Message = {
         id: Date.now().toString(),
@@ -124,21 +125,16 @@ export default function RAGTesterNew({
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
-    console.log(selectedModel);
-
     try {
-      const response = await fetch("/api/rag/generate", {
+      const data = await fetchInstance("/qa/rag-generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: input,
           prompt_text: currentPrompt,
           model: selectedModel,
-          embedding_count: 1,
+          embedding_count: 3,
         }),
       });
-
-      const data = await response.json();
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
