@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { fetchInstance } from "@/lib/fetchInstance";
 
 interface QAAddFormProps {
   onAddSuccess?: () => void;
@@ -18,23 +19,19 @@ export default function QAAddForm({ onAddSuccess }: QAAddFormProps) {
 
     setLoading(true);
     try {
-      const response = await fetch("/api/rag", {
+      const data = await fetchInstance("/qa/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: newQuestion,
           answer: newAnswer,
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("data", data);
-        setNewQuestion("");
-        setNewAnswer("");
-        setShowAddForm(false);
-        onAddSuccess?.();
-      }
+      console.log("data", data);
+      setNewQuestion("");
+      setNewAnswer("");
+      setShowAddForm(false);
+      onAddSuccess?.();
     } catch (error) {
       console.error("Add QA error:", error);
       alert("❌ QA 추가 중 오류가 발생했습니다.");

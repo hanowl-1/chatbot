@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { FileSpreadsheet, Check, X } from "lucide-react";
+import { fetchInstance } from "@/lib/fetchInstance";
 
 interface ExcelUploadProps {
   onUploadSuccess?: () => void;
@@ -32,28 +33,24 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
-      formData.append("sheetName", sheetName);
 
-      const response = await fetch("/api/rag/upload", {
-        method: "POST",
-        body: formData,
+      const fileName = selectedFile.name || "FAQ관리.xlsx";
+      const data = await fetchInstance(
+        `/qa/bulk-upload?file_path=${encodeURIComponent(
+          fileName
+        )}&sheet_name=${encodeURIComponent(sheetName)}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      setUploadResult({
+        success: true,
+        message: `${data.count || 0}개의 QA가 성공적으로 추가되었습니다.`,
+        count: data.count,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setUploadResult({
-          success: true,
-          message: `${data.count || 0}개의 QA가 성공적으로 추가되었습니다.`,
-          count: data.count,
-        });
-        onUploadSuccess?.();
-      } else {
-        setUploadResult({
-          success: false,
-          message: data.error || "추가 중 오류가 발생했습니다.",
-        });
-      }
+      onUploadSuccess?.();
     } catch (error) {
       console.error("Upload error:", error);
       setUploadResult({

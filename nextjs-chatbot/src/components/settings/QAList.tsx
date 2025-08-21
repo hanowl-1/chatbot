@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
+import { fetchInstance } from "@/lib/fetchInstance";
 
 interface QAItem {
   id: number;
@@ -34,8 +35,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
   const fetchQAList = async (page: number = 1) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/rag?page=${page}&size=20`);
-      const result = await response.json();
+      const result = await fetchInstance(`/qa/?page=${page}&size=20`);
       if (result && result.data) {
         setQaList(result.data);
         setPagination(result.pagination);
@@ -55,17 +55,14 @@ export default function QAList({ refreshTrigger }: QAListProps) {
 
     setDeletingId(id);
     try {
-      const response = await fetch(`/api/rag/${id}`, {
+      await fetchInstance(`/qa/${id}`, {
         method: "DELETE",
       });
 
-      if (response.ok) {
-        alert("✅ QA가 성공적으로 삭제되었습니다.");
-        // 목록 새로고침
-        fetchQAList(currentPage);
-      } else {
-        alert("❌ QA 삭제 중 오류가 발생했습니다.");
-      }
+      // 성공 시
+      alert("✅ QA가 성공적으로 삭제되었습니다.");
+      // 목록 새로고침
+      fetchQAList(currentPage);
     } catch (error) {
       console.error("Delete error:", error);
       alert("❌ QA 삭제 중 오류가 발생했습니다.");
