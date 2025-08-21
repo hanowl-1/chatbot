@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Search, Sparkles, Plus } from "lucide-react";
+import { fetchInstance } from "@/lib/rag-client-simple";
 
 interface QAItem {
   id: string;
@@ -37,15 +38,13 @@ export default function QASearch({
     setLoading(true);
     setAiGeneratedQA(null); // 새 검색 시 초기화
     try {
-      const response = await fetch("/api/rag/search", {
+      const data = await fetchInstance("/qa/search", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: searchQuery,
           limit: 10,
         }),
       });
-      const data = await response.json();
       if (data.results) {
         setSearchResults(data.results);
         onSearchComplete?.(data.results);
@@ -66,17 +65,15 @@ export default function QASearch({
       const promptData = await promptResponse.json();
       const promptText = promptData?.systemPrompt || "";
 
-      const response = await fetch("/api/rag/generate", {
+      const data = await fetchInstance("/qa/rag-generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: searchQuery,
           prompt_text: promptText, // 가져온 프롬프트 사용
-          model: "gemini-flash-2.0",
+          model: "gpt-5",
           embedding_count: 1,
         }),
       });
-      const data = await response.json();
       console.log("data", data);
 
       if (data.generated_answer) {
@@ -99,21 +96,19 @@ export default function QASearch({
 
     setSavingQA(true);
     try {
-      const response = await fetch("/api/rag", {
+      await fetchInstance("/qa/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: aiGeneratedQA.question,
           answer: aiGeneratedQA.answer,
         }),
       });
 
-      if (response.ok) {
-        setAiGeneratedQA(null);
-        setSearchQuery("");
-        setSearchResults([]);
-        onQAAdded?.(); // 목록 새로고침
-      }
+      // 성공 시
+      setAiGeneratedQA(null);
+      setSearchQuery("");
+      setSearchResults([]);
+      onQAAdded?.(); // 목록 새로고침
     } catch (error) {
       console.error("Save QA error:", error);
       alert("❌ QA 저장 중 오류가 발생했습니다.");
@@ -198,17 +193,29 @@ export default function QASearch({
                   <label className="text-sm font-medium text-gray-700">
                     질문:
                   </label>
-                  <p className="mt-1 p-2 bg-white rounded border border-purple-100 text-sm">
-                    {aiGeneratedQA.question}
-                  </p>
+                  <textarea
+                    value={aiGeneratedQA.question}
+                    onChange={(e) => setAiGeneratedQA({
+                      ...aiGeneratedQA,
+                      question: e.target.value
+                    })}
+                    className="mt-1 w-full p-2 bg-white rounded border border-purple-200 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    rows={2}
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">
                     답변:
                   </label>
-                  <p className="mt-1 p-2 bg-white rounded border border-purple-100 text-sm whitespace-pre-wrap">
-                    {aiGeneratedQA.answer}
-                  </p>
+                  <textarea
+                    value={aiGeneratedQA.answer}
+                    onChange={(e) => setAiGeneratedQA({
+                      ...aiGeneratedQA,
+                      answer: e.target.value
+                    })}
+                    className="mt-1 w-full p-2 bg-white rounded border border-purple-200 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent whitespace-pre-wrap"
+                    rows={5}
+                  />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button
