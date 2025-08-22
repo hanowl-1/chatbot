@@ -8,7 +8,7 @@ const navItems = [
   { href: "/chatbot", label: "챗봇 테스터", icon: MessageSquare },
   { href: "/prompts", label: "프롬프트 관리", icon: FileText },
   { href: "/settings", label: "설정", icon: Settings },
-  // { href: "/reviews", label: "검증 대기", icon: AlertTriangle },
+  { href: "/reviews", label: "검증 대기", icon: AlertTriangle },
 ];
 
 export default function Navigation() {
