@@ -1,137 +1,285 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Loader2, Save, RotateCcw } from 'lucide-react'
+import { useState, useEffect } from "react";
+import {
+  FileText,
+  Save,
+  RotateCcw,
+  Sparkles,
+  Search,
+  Shield,
+} from "lucide-react";
+
+interface Prompts {
+  queryAnalysis: string;
+  answerGeneration: string;
+  confidenceCheck: string;
+  lastModified?: string;
+  version?: number;
+}
+
+// API 호출 실패 시 사용할 기본값 (폴백용)
+const DEFAULT_PROMPTS = {
+  queryAnalysis: "",
+  answerGeneration: "",
+  confidenceCheck: "",
+};
 
 export default function PromptsPage() {
-  const [systemPrompt, setSystemPrompt] = useState('')
-  const [originalPrompt, setOriginalPrompt] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [lastModified, setLastModified] = useState('')
-  const [version, setVersion] = useState(0)
+  const [prompts, setPrompts] = useState<Prompts>(DEFAULT_PROMPTS);
+  const [originalPrompts, setOriginalPrompts] =
+    useState<Prompts>(DEFAULT_PROMPTS);
+  const [activeTab, setActiveTab] = useState<keyof Prompts>("queryAnalysis");
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
 
+  const tabs = [
+    {
+      id: "queryAnalysis" as const,
+      label: "질의분석 프롬프트",
+      icon: Search,
+      description: "사용자 질문 의도 파악 및 분류",
+    },
+    {
+      id: "answerGeneration" as const,
+      label: "답변생성 프롬프트",
+      icon: Sparkles,
+      description: "RAG 기반 답변 생성",
+    },
+    {
+      id: "confidenceCheck" as const,
+      label: "신뢰도검사 프롬프트",
+      icon: Shield,
+      description: "답변 품질 및 신뢰도 평가",
+    },
+  ];
+
+  // 프롬프트 불러오기
   useEffect(() => {
-    loadPrompt()
-  }, [])
+    fetchPrompts();
+  }, []);
 
-  const loadPrompt = async () => {
-    setLoading(true)
+  const fetchPrompts = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/prompts')
-      if (!response.ok) throw new Error('Failed to load prompt')
-      
-      const data = await response.json()
-      setSystemPrompt(data.systemPrompt)
-      setOriginalPrompt(data.systemPrompt)
-      setLastModified(data.lastModified)
-      setVersion(data.version)
-    } catch (error) {
-      setMessage({ type: 'error', text: '프롬프트를 불러오는데 실패했습니다.' })
-    } finally {
-      setLoading(false)
-    }
-  }
+      const response = await fetch("/api/prompts");
+      const data = await response.json();
 
-  const savePrompt = async () => {
-    setSaving(true)
-    setMessage(null)
-    
+      // API에서 받은 프롬프트 설정
+      if (data) {
+        const newPrompts = {
+          queryAnalysis: data.queryAnalysisPrompt || "",
+          answerGeneration: data.answerGenerationPrompt || "",
+          confidenceCheck: data.confidenceCheckPrompt || "",
+          lastModified: data.lastModified,
+          version: data.version,
+        };
+        setPrompts(newPrompts);
+        setOriginalPrompts(newPrompts);
+      }
+    } catch (error) {
+      console.error("Failed to fetch prompts:", error);
+      setPrompts(DEFAULT_PROMPTS);
+      setOriginalPrompts(DEFAULT_PROMPTS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 프롬프트 저장
+  const handleSave = async () => {
+    setSaveStatus("saving");
     try {
-      const response = await fetch('/api/prompts', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemPrompt })
-      })
-      
-      if (!response.ok) throw new Error('Failed to save prompt')
-      
-      const data = await response.json()
-      setOriginalPrompt(systemPrompt)
-      setLastModified(data.data.lastModified)
-      setVersion(data.data.version)
-      setMessage({ type: 'success', text: '프롬프트가 성공적으로 저장되었습니다.' })
+      const response = await fetch("/api/prompts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          queryAnalysisPrompt: prompts.queryAnalysis,
+          answerGenerationPrompt: prompts.answerGeneration,
+          confidenceCheckPrompt: prompts.confidenceCheck,
+        }),
+      });
+
+      if (response.ok) {
+        setSaveStatus("saved");
+        setOriginalPrompts(prompts);
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      } else {
+        setSaveStatus("error");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      }
     } catch (error) {
-      setMessage({ type: 'error', text: '프롬프트 저장에 실패했습니다.' })
-    } finally {
-      setSaving(false)
+      console.error("Save error:", error);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus("idle"), 2000);
     }
-  }
+  };
 
-  const resetPrompt = () => {
-    setSystemPrompt(originalPrompt)
-    setMessage(null)
-  }
+  // 프롬프트 초기화
+  const handleReset = () => {
+    setPrompts(originalPrompts);
+  };
 
-  const hasChanges = systemPrompt !== originalPrompt
+  // 기본값으로 복원
+  const handleRestoreDefault = () => {
+    if (confirm("기본 프롬프트로 복원하시겠습니까?")) {
+      setPrompts(DEFAULT_PROMPTS);
+    }
+  };
+
+  const hasChanges =
+    JSON.stringify(prompts) !== JSON.stringify(originalPrompts);
+  const ActiveIcon = tabs.find((t) => t.id === activeTab)?.icon || FileText;
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-semibold">시스템 프롬프트 관리</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            챗봇의 시스템 프롬프트를 확인하고 수정할 수 있습니다.
-          </p>
-        </div>
-        <div className="p-6 space-y-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
+    <div className="bg-white rounded-lg shadow-md">
+      {/* 헤더 */}
+      <div className="border-b px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <FileText className="w-6 h-6" />
+              프롬프트 관리
+            </h2>
+            <p className="text-gray-600 mt-1">
+              각 LLM 단계별 프롬프트를 관리하고 최적화하세요
+            </p>
+          </div>
+          {prompts.version && (
+            <div className="text-sm text-gray-500">
+              버전: {prompts.version} | 수정일:{" "}
+              {prompts.lastModified
+                ? new Date(prompts.lastModified).toLocaleDateString("ko-KR")
+                : "-"}
             </div>
-          ) : (
-            <>
-              <div className="flex justify-between items-center text-sm text-gray-600">
-                <span>버전: {version}</span>
-                <span>
-                  마지막 수정: {lastModified ? new Date(lastModified).toLocaleString('ko-KR') : '-'}
-                </span>
-              </div>
-
-              <textarea
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-                className="w-full min-h-[500px] p-3 font-mono text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="시스템 프롬프트를 입력하세요..."
-              />
-
-              {message && (
-                <div className={`p-3 rounded-md ${
-                  message.type === 'error' 
-                    ? 'bg-red-50 text-red-800 border border-red-200' 
-                    : 'bg-green-50 text-green-800 border border-green-200'
-                }`}>
-                  {message.text}
-                </div>
-              )}
-
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={resetPrompt}
-                  disabled={!hasChanges || saving}
-                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  원래대로
-                </button>
-                <button
-                  onClick={savePrompt}
-                  disabled={!hasChanges || saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                >
-                  {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  저장
-                </button>
-              </div>
-            </>
           )}
         </div>
       </div>
+
+      {/* 탭 네비게이션 */}
+      <div className="border-b">
+        <nav className="flex px-6">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-3 mr-2 font-medium transition-all flex items-center gap-2 border-b-2 ${
+                  activeTab === tab.id
+                    ? "text-blue-600 border-blue-600 bg-blue-50"
+                    : "text-gray-600 hover:text-gray-800 border-transparent hover:bg-gray-50"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* 프롬프트 에디터 */}
+      <div className="p-6">
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* 현재 탭 설명 */}
+            <div className="bg-gray-50 p-4 rounded-lg flex items-start gap-3">
+              <ActiveIcon className="w-5 h-5 text-gray-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-gray-800">
+                  {tabs.find((t) => t.id === activeTab)?.label}
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {tabs.find((t) => t.id === activeTab)?.description}
+                </p>
+              </div>
+            </div>
+
+            {/* 텍스트 에리어 */}
+            <div>
+              <textarea
+                value={prompts[activeTab]}
+                onChange={(e) =>
+                  setPrompts({
+                    ...prompts,
+                    [activeTab]: e.target.value,
+                  })
+                }
+                className="w-full h-96 p-4 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={`${
+                  tabs.find((t) => t.id === activeTab)?.label
+                }을 입력하세요...`}
+              />
+              <div className="mt-2 text-right text-sm text-gray-500">
+                {typeof prompts[activeTab] === "string"
+                  ? prompts[activeTab].length
+                  : 0}{" "}
+                글자
+              </div>
+            </div>
+
+            {/* 액션 버튼 */}
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRestoreDefault}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  기본값 복원
+                </button>
+              </div>
+              <div className="flex gap-2">
+                {hasChanges && (
+                  <button
+                    onClick={handleReset}
+                    className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  >
+                    변경 취소
+                  </button>
+                )}
+                <button
+                  onClick={handleSave}
+                  disabled={!hasChanges || saveStatus === "saving"}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                    hasChanges
+                      ? "bg-blue-500 text-white hover:bg-blue-600"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  <Save className="w-4 h-4" />
+                  {saveStatus === "saving"
+                    ? "저장 중..."
+                    : saveStatus === "saved"
+                    ? "저장 완료!"
+                    : saveStatus === "error"
+                    ? "저장 실패"
+                    : "저장"}
+                </button>
+              </div>
+            </div>
+
+            {/* 상태 메시지 */}
+            {saveStatus === "saved" && (
+              <div className="p-3 bg-green-50 text-green-700 rounded-lg">
+                ✅ 프롬프트가 성공적으로 저장되었습니다.
+              </div>
+            )}
+            {saveStatus === "error" && (
+              <div className="p-3 bg-red-50 text-red-700 rounded-lg">
+                ❌ 저장 중 오류가 발생했습니다. 다시 시도해주세요.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }

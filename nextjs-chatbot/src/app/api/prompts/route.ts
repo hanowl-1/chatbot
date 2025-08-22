@@ -1,124 +1,155 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 // Supabase 클라이언트 초기화
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+);
+
+// 프롬프트 타입 정의
+const PROMPT_TYPES = {
+  QUERY_ANALYSIS: "query_analysis",
+  ANSWER_GENERATION: "answer_generation",
+  CONFIDENCE_CHECK: "confidence_check",
+} as const;
 
 export async function GET() {
   try {
-    // Supabase에서 프롬프트 가져오기
+    // Supabase에서 모든 프롬프트 가져오기
     const { data, error } = await supabase
-      .from('prompts')
-      .select('*')
-      .eq('id', 1)
-      .single()
+      .from("prompts")
+      .select("*")
+      .order("prompt_type");
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
       // 데이터가 없으면 기본값 반환
-      const defaultPrompts = {
-        systemPrompt: "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
+      return NextResponse.json({
+        queryAnalysisPrompt: "당신은 사용자 질문을 분석하는 AI입니다.",
+        answerGenerationPrompt:
+          "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
+        confidenceCheckPrompt:
+          "당신은 AI 답변의 품질을 평가하는 검증 시스템입니다.",
         lastModified: new Date().toISOString(),
-        version: 1
-      }
-      return NextResponse.json(defaultPrompts)
+        version: 1,
+      });
     }
+
+    // 프롬프트 타입별로 정리
+    const promptsMap = data.reduce((acc, item) => {
+      acc[item.prompt_type] = item;
+      return acc;
+    }, {} as Record<string, any>);
 
     // API 응답 형식 맞추기
     return NextResponse.json({
-      systemPrompt: data.system_prompt,
-      lastModified: data.last_modified,
-      version: data.version
-    })
+      queryAnalysisPrompt:
+        promptsMap[PROMPT_TYPES.QUERY_ANALYSIS]?.prompt_text || "",
+      answerGenerationPrompt:
+        promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.prompt_text || "",
+      confidenceCheckPrompt:
+        promptsMap[PROMPT_TYPES.CONFIDENCE_CHECK]?.prompt_text || "",
+      lastModified:
+        promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.last_modified ||
+        new Date().toISOString(),
+      version: Math.max(
+        promptsMap[PROMPT_TYPES.QUERY_ANALYSIS]?.version || 1,
+        promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.version || 1,
+        promptsMap[PROMPT_TYPES.CONFIDENCE_CHECK]?.version || 1
+      ),
+    });
   } catch (error) {
-    console.error('Error fetching prompt:', error)
-    const defaultPrompts = {
-      systemPrompt: "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
+    console.error("Error fetching prompts:", error);
+    return NextResponse.json({
+      queryAnalysisPrompt: "당신은 사용자 질문을 분석하는 AI입니다.",
+      answerGenerationPrompt:
+        "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
+      confidenceCheckPrompt:
+        "당신은 AI 답변의 품질을 평가하는 검증 시스템입니다.",
       lastModified: new Date().toISOString(),
-      version: 1
-    }
-    return NextResponse.json(defaultPrompts)
+      version: 1,
+    });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { systemPrompt } = body
+    const body = await request.json();
+    const {
+      answerGenerationPrompt,
+      queryAnalysisPrompt,
+      confidenceCheckPrompt,
+    } = body;
 
-    if (!systemPrompt) {
-      return NextResponse.json(
-        { error: 'System prompt is required' },
-        { status: 400 }
-      )
-    }
+    // 업데이트할 프롬프트들 준비
+    const updates = [
+      {
+        type: PROMPT_TYPES.QUERY_ANALYSIS,
+        text: queryAnalysisPrompt,
+      },
+      {
+        type: PROMPT_TYPES.ANSWER_GENERATION,
+        text: answerGenerationPrompt,
+      },
+      {
+        type: PROMPT_TYPES.CONFIDENCE_CHECK,
+        text: confidenceCheckPrompt,
+      },
+    ].filter((item) => item.text !== undefined);
 
-    // 현재 버전 가져오기
-    const { data: currentData } = await supabase
-      .from('prompts')
-      .select('version')
-      .eq('id', 1)
-      .single()
+    const results = [];
 
-    const currentVersion = currentData?.version || 0
+    // 각 프롬프트 타입별로 업데이트 또는 생성
+    for (const update of updates) {
+      // 먼저 해당 타입의 프롬프트가 있는지 확인
+      const { data: existing } = await supabase
+        .from("prompts")
+        .select("version")
+        .eq("prompt_type", update.type)
+        .single();
 
-    // Supabase에서 프롬프트 업데이트
-    const { data, error } = await supabase
-      .from('prompts')
-      .update({
-        system_prompt: systemPrompt,
-        last_modified: new Date().toISOString(),
-        version: currentVersion + 1
-      })
-      .eq('id', 1)
-      .select()
-      .single()
-
-    if (error) {
-      // 레코드가 없으면 생성
-      if (error.code === 'PGRST116') {
-        const { data: newData, error: insertError } = await supabase
-          .from('prompts')
-          .insert({
-            id: 1,
-            system_prompt: systemPrompt,
+      if (existing) {
+        // 업데이트
+        const { data, error } = await supabase
+          .from("prompts")
+          .update({
+            prompt_text: update.text,
             last_modified: new Date().toISOString(),
-            version: 1
+            version: (existing.version || 0) + 1,
+          })
+          .eq("prompt_type", update.type)
+          .select()
+          .single();
+
+        if (error) throw error;
+        results.push(data);
+      } else {
+        // 새로 생성
+        const { data, error } = await supabase
+          .from("prompts")
+          .insert({
+            prompt_type: update.type,
+            prompt_text: update.text,
+            last_modified: new Date().toISOString(),
+            version: 1,
           })
           .select()
-          .single()
+          .single();
 
-        if (insertError) {
-          throw insertError
-        }
-
-        return NextResponse.json({
-          message: 'Prompt created successfully',
-          data: {
-            systemPrompt: newData.system_prompt,
-            lastModified: newData.last_modified,
-            version: newData.version
-          }
-        })
+        if (error) throw error;
+        results.push(data);
       }
-      throw error
     }
 
     return NextResponse.json({
-      message: 'Prompt updated successfully',
-      data: {
-        systemPrompt: data.system_prompt,
-        lastModified: data.last_modified,
-        version: data.version
-      }
-    })
+      message: "Prompts updated successfully",
+      data: results,
+    });
   } catch (error) {
-    console.error('Error updating prompt:', error)
+    console.error("Error updating prompts:", error);
     return NextResponse.json(
-      { error: 'Failed to update prompt' },
+      { error: "Failed to update prompts" },
       { status: 500 }
-    )
+    );
   }
 }
