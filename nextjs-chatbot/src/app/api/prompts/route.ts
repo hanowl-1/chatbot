@@ -12,6 +12,7 @@ const PROMPT_TYPES = {
   QUERY_ANALYSIS: "query_analysis",
   ANSWER_GENERATION: "answer_generation",
   CONFIDENCE_CHECK: "confidence_check",
+  FINAL_ANSWER: "final_answer",
 } as const;
 
 export async function GET() {
@@ -25,11 +26,12 @@ export async function GET() {
     if (error || !data || data.length === 0) {
       // 데이터가 없으면 기본값 반환
       return NextResponse.json({
-        queryAnalysisPrompt: "당신은 사용자 질문을 분석하는 AI입니다.",
-        answerGenerationPrompt:
+        analyze_query: "당신은 사용자 질문을 분석하는 AI입니다.",
+        generate_answer:
           "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
-        confidenceCheckPrompt:
+        assess_confidence:
           "당신은 AI 답변의 품질을 평가하는 검증 시스템입니다.",
+        generate_final_answer: "당신은 최종 답변을 생성하는 AI입니다.",
         lastModified: new Date().toISOString(),
         version: 1,
       });
@@ -43,29 +45,30 @@ export async function GET() {
 
     // API 응답 형식 맞추기
     return NextResponse.json({
-      queryAnalysisPrompt:
-        promptsMap[PROMPT_TYPES.QUERY_ANALYSIS]?.prompt_text || "",
-      answerGenerationPrompt:
+      analyze_query: promptsMap[PROMPT_TYPES.QUERY_ANALYSIS]?.prompt_text || "",
+      generate_answer:
         promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.prompt_text || "",
-      confidenceCheckPrompt:
+      assess_confidence:
         promptsMap[PROMPT_TYPES.CONFIDENCE_CHECK]?.prompt_text || "",
+      generate_final_answer:
+        promptsMap[PROMPT_TYPES.FINAL_ANSWER]?.prompt_text || "",
       lastModified:
         promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.last_modified ||
         new Date().toISOString(),
       version: Math.max(
         promptsMap[PROMPT_TYPES.QUERY_ANALYSIS]?.version || 1,
         promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.version || 1,
-        promptsMap[PROMPT_TYPES.CONFIDENCE_CHECK]?.version || 1
+        promptsMap[PROMPT_TYPES.CONFIDENCE_CHECK]?.version || 1,
+        promptsMap[PROMPT_TYPES.FINAL_ANSWER]?.version || 1
       ),
     });
   } catch (error) {
     console.error("Error fetching prompts:", error);
     return NextResponse.json({
-      queryAnalysisPrompt: "당신은 사용자 질문을 분석하는 AI입니다.",
-      answerGenerationPrompt:
-        "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
-      confidenceCheckPrompt:
-        "당신은 AI 답변의 품질을 평가하는 검증 시스템입니다.",
+      analyze_query: "당신은 사용자 질문을 분석하는 AI입니다.",
+      generate_answer: "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
+      assess_confidence: "당신은 AI 답변의 품질을 평가하는 검증 시스템입니다.",
+      generate_final_answer: "당신은 최종 답변을 생성하는 AI입니다.",
       lastModified: new Date().toISOString(),
       version: 1,
     });
@@ -76,24 +79,29 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      answerGenerationPrompt,
-      queryAnalysisPrompt,
-      confidenceCheckPrompt,
+      analyze_query,
+      generate_answer,
+      assess_confidence,
+      generate_final_answer,
     } = body;
 
     // 업데이트할 프롬프트들 준비
     const updates = [
       {
         type: PROMPT_TYPES.QUERY_ANALYSIS,
-        text: queryAnalysisPrompt,
+        text: analyze_query,
       },
       {
         type: PROMPT_TYPES.ANSWER_GENERATION,
-        text: answerGenerationPrompt,
+        text: generate_answer,
       },
       {
         type: PROMPT_TYPES.CONFIDENCE_CHECK,
-        text: confidenceCheckPrompt,
+        text: assess_confidence,
+      },
+      {
+        type: PROMPT_TYPES.FINAL_ANSWER,
+        text: generate_final_answer,
       },
     ].filter((item) => item.text !== undefined);
 

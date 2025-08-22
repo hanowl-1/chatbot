@@ -4,10 +4,12 @@ export interface Message {
   content: string;
   model?: string;
   timestamp: Date;
-  pipelineResults?: {
-    queryAnalysis?: any;
-    answerGeneration?: any;
-    confidenceCheck?: any;
-  };
   selectedPipeline?: string;
+  referencedVectors?: Array<{
+    qa_id: number;
+    question: string;
+    answer: string;
+    similarity_score: number;
+    updated_at: string;
+  }>;
 }

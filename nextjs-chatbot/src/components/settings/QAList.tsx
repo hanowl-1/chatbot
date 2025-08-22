@@ -17,6 +17,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
     setLoading(true);
     try {
       const result = await fetchInstance(`/qa/?page=${page}&size=20`);
+
       if (result && result.data) {
         setQaList(result.data);
         setPagination(result.pagination);
@@ -88,7 +89,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
                     Q: {item.question}
                   </p>
                   <span className="text-xs text-blue-600 font-semibold ml-2">
-                    qa_id: {item.id}
+                    qa_id: {item.qa_id}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">A: {item.answer}</p>

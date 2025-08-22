@@ -19,9 +19,10 @@ export default function ChatbotPage() {
   );
   const [loading, setLoading] = useState(false);
   const [prompts, setPrompts] = useState<Prompts>({
-    queryAnalysis: "",
-    answerGeneration: "",
-    confidenceCheck: "",
+    analyze_query: "",
+    generate_answer: "",
+    assess_confidence: "",
+    generate_final_answer: "",
   });
   const [messages, setMessages] = useState<any[]>([]);
 
@@ -36,11 +37,13 @@ export default function ChatbotPage() {
     try {
       const response = await fetch("/api/prompts");
       const data = await response.json();
+
       if (data) {
         setPrompts({
-          queryAnalysis: data.queryAnalysisPrompt || "",
-          answerGeneration: data.systemPrompt || "",
-          confidenceCheck: data.confidenceCheckPrompt || "",
+          analyze_query: data.analyze_query || "",
+          generate_answer: data.generate_answer || "",
+          assess_confidence: data.assess_confidence || "",
+          generate_final_answer: data.generate_final_answer || "",
         });
       }
     } catch (error) {
@@ -72,58 +75,74 @@ export default function ChatbotPage() {
     setLoading(true);
 
     try {
-      // 선택된 파이프라인 정보
-      const pipelineInfo = PIPELINE_OPTIONS.find(
-        (p) => p.value === selectedPipeline
-      );
+      // API 호출 - 최종 답변일 때는 scope 필드 제외
+      const requestBody: any = {
+        model: selectedModel,
+        question: input,
+        analyze_query_prompt: prompts.analyze_query,
+        generate_answer_prompt: prompts.generate_answer,
+        assess_confidence_prompt: prompts.assess_confidence,
+        generate_final_answer_prompt: prompts.generate_final_answer,
+        embedding_count: 3,
+      };
 
-      // API 호출 (실제 구현 시 수정 필요)
-      // const response = await fetch("/api/rag/test", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     question: input,
-      //     model: selectedModel,
-      //     pipeline: selectedPipeline,
-      //     stages: pipelineInfo?.stages,
-      //     prompts: {
-      //       queryAnalysis: prompts.queryAnalysis,
-      //       answerGeneration: prompts.answerGeneration,
-      //       confidenceCheck: prompts.confidenceCheck,
-      //     },
-      //   }),
-      // });
-      const data = await fetchInstance(`/qa/rag-generate`, {
+      // 최종 답변이 아닐 때만 scope 추가
+      if (selectedPipeline !== "all") {
+        requestBody.scope = selectedPipeline;
+      }
+
+      const data = await fetchInstance(`/qa/rag-test`, {
         method: "POST",
-        body: JSON.stringify({
-          question: input,
-          prompt_text: prompts.answerGeneration,
-          model: selectedModel,
-          embedding_count: 3,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      // const data = await response.json();
-
       // 결과 메시지 생성
+      let content = "답변을 생성할 수 없습니다.";
+
+      // 파이프라인에 따라 적절한 응답 선택
+      if (selectedPipeline === "analyze_query" && data.query_analysis) {
+        // query_analysis가 객체인 경우 JSON 문자열로 변환
+        content =
+          typeof data.query_analysis === "object"
+            ? JSON.stringify(
+                {
+                  ...data.query_analysis,
+                  refined_questions: data.refined_questions,
+                },
+                null,
+                2
+              )
+            : data.query_analysis;
+      } else if (
+        selectedPipeline === "generate_answer" &&
+        data.raw_generated_answer
+      ) {
+        content = data.raw_generated_answer;
+      } else if (
+        selectedPipeline === "assess_confidence" &&
+        data.confidence_assessment
+      ) {
+        content =
+          typeof data.confidence_assessment === "object"
+            ? JSON.stringify(data.confidence_assessment, null, 2)
+            : data.confidence_assessment;
+      } else if (selectedPipeline === "" && data.final_answer) {
+        content = data.final_answer;
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.generated_answer || "답변을 생성할 수 없습니다.",
+        content,
         model: selectedModel,
         timestamp: new Date(),
-        // pipelineResults: data,
-        // selectedPipeline: selectedPipeline,
+        selectedPipeline,
+        referencedVectors: data.referenced_vectors,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error("Error:", error);
-
-      // 더미 응답 (개발용)
-      const pipelineInfo = PIPELINE_OPTIONS.find(
-        (p) => p.value === selectedPipeline
-      );
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -131,8 +150,6 @@ export default function ChatbotPage() {
         content: "오류가 발생했습니다. 다시 시도해주세요.",
         model: selectedModel,
         timestamp: new Date(),
-        // pipelineResults: dummyResults,
-        // selectedPipeline: selectedPipeline,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -140,45 +157,6 @@ export default function ChatbotPage() {
       setLoading(false);
     }
   };
-
-  // 파이프라인 결과 포맷팅
-  // const formatPipelineResults = (results: any, stages: string[]) => {
-  //   let formatted = "";
-
-  //   if (stages.includes("queryAnalysis") && results.queryAnalysis) {
-  //     formatted += "### 📊 질의분석 결과\n";
-  //     formatted += `- **의도**: ${results.queryAnalysis.intent}\n`;
-  //     formatted += `- **카테고리**: ${results.queryAnalysis.category}\n`;
-  //     formatted += `- **키워드**: ${results.queryAnalysis.keywords?.join(
-  //       ", "
-  //     )}\n`;
-  //     formatted += `- **질문 유형**: ${results.queryAnalysis.questionType}\n\n`;
-  //   }
-
-  //   if (stages.includes("answerGeneration") && results.answerGeneration) {
-  //     formatted += "### 💬 생성된 답변\n";
-  //     formatted += `${results.answerGeneration.answer}\n\n`;
-  //     if (results.answerGeneration.sources) {
-  //       formatted += `*참조: ${results.answerGeneration.sources.join(
-  //         ", "
-  //       )}*\n\n`;
-  //     }
-  //   }
-
-  //   if (stages.includes("confidenceCheck") && results.confidenceCheck) {
-  //     formatted += "### 🛡️ 신뢰도 검사\n";
-  //     formatted += `- **신뢰도**: ${(
-  //       results.confidenceCheck.confidence * 100
-  //     ).toFixed(1)}%\n`;
-  //     formatted += `- **정확도**: ${results.confidenceCheck.accuracy}\n`;
-  //     formatted += `- **자동응답 가능**: ${
-  //       results.confidenceCheck.autoResponse ? "✅ 예" : "❌ 아니오"
-  //     }\n`;
-  //     formatted += `- **피드백**: ${results.confidenceCheck.feedback}\n`;
-  //   }
-
-  //   return formatted;
-  // };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -270,7 +248,11 @@ export default function ChatbotPage() {
                   >
                     <div
                       className={`p-2 rounded-full ${
-                        message.role === "user" ? "bg-blue-500" : "bg-green-500"
+                        message.role === "user"
+                          ? "bg-blue-500"
+                          : message.role === "system"
+                          ? "bg-gray-500"
+                          : "bg-green-500"
                       }`}
                     >
                       {message.role === "user" ? (
@@ -283,6 +265,8 @@ export default function ChatbotPage() {
                       className={`px-4 py-2 rounded-lg ${
                         message.role === "user"
                           ? "bg-blue-500 text-white"
+                          : message.role === "system"
+                          ? "bg-gray-100 border border-gray-300"
                           : "bg-white border border-gray-200"
                       }`}
                     >
@@ -309,6 +293,57 @@ export default function ChatbotPage() {
                                     ?.label
                                 }
                               </span>
+                            </div>
+                          </div>
+                        )}
+                      {message.role === "assistant" &&
+                        message.referencedVectors &&
+                        message.referencedVectors.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="text-xs text-gray-600 mb-2">
+                              참조된 FAQ (유사도 높은 순):
+                            </div>
+                            <div className="space-y-2">
+                              {message.referencedVectors.map(
+                                (vector, index) => (
+                                  <button
+                                    key={vector.qa_id}
+                                    onClick={() => {
+                                      const detailMessage: Message = {
+                                        id: Date.now().toString(),
+                                        role: "system",
+                                        content: `📌 QA_ID #${
+                                          vector.qa_id
+                                        } 상세 정보\n\n❓ 질문:\n${
+                                          vector.question
+                                        }\n\n💬 답변:\n${
+                                          vector.answer
+                                        }\n\n📊 유사도: ${(
+                                          vector.similarity_score * 100
+                                        ).toFixed(1)}%`,
+                                        timestamp: new Date(),
+                                      };
+                                      setMessages((prev) => [
+                                        ...prev,
+                                        detailMessage,
+                                      ]);
+                                    }}
+                                    className="w-full text-left p-2 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-700 truncate flex-1">
+                                        {index + 1}. {vector.question}
+                                      </span>
+                                      <span className="text-xs text-gray-500 ml-2">
+                                        {(
+                                          vector.similarity_score * 100
+                                        ).toFixed(1)}
+                                        %
+                                      </span>
+                                    </div>
+                                  </button>
+                                )
+                              )}
                             </div>
                           </div>
                         )}
