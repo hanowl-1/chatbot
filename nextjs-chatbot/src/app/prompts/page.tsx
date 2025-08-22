@@ -9,14 +9,7 @@ import {
   Search,
   Shield,
 } from "lucide-react";
-
-interface Prompts {
-  queryAnalysis: string;
-  answerGeneration: string;
-  confidenceCheck: string;
-  lastModified?: string;
-  version?: number;
-}
+import { Prompts } from "@/types/prompts";
 
 // API 호출 실패 시 사용할 기본값 (폴백용)
 const DEFAULT_PROMPTS = {

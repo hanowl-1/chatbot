@@ -3,20 +3,7 @@
 import { useState } from "react";
 import { Search, Sparkles, Plus } from "lucide-react";
 import { fetchInstance } from "@/lib/fetchInstance";
-
-interface QAItem {
-  id: string;
-  qa_id?: string;
-  question: string;
-  answer: string;
-  similarity_score?: number;
-  created_at?: string;
-}
-
-interface QASearchProps {
-  onSearchComplete?: (results: QAItem[]) => void;
-  onQAAdded?: () => void;
-}
+import { QAItem, QASearchProps } from "@/types/qa";
 
 export default function QASearch({
   onSearchComplete,

@@ -1,8 +1,6 @@
 // 임시 UI 페이지
 "use client";
 
-import PendingReviews from "@/components/PendingReviews";
-
 import { useState, useEffect } from "react";
 import {
   MessageSquareWarning,

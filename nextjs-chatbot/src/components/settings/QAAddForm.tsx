@@ -3,10 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { fetchInstance } from "@/lib/fetchInstance";
-
-interface QAAddFormProps {
-  onAddSuccess?: () => void;
-}
+import { QAAddFormProps } from "@/types/qa";
 
 export default function QAAddForm({ onAddSuccess }: QAAddFormProps) {
   const [showAddForm, setShowAddForm] = useState(false);

@@ -3,27 +3,8 @@
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import { fetchInstance } from "@/lib/fetchInstance";
-
-interface QAItem {
-  id: number;
-  qa_id: string;
-  question: string;
-  answer: string;
-  updated_at?: string;
-}
-
-interface Pagination {
-  current_page: number;
-  page_size: number;
-  total_items: number;
-  total_pages: number;
-  has_next: boolean;
-  has_previous: boolean;
-}
-
-interface QAListProps {
-  refreshTrigger?: number;
-}
+import { QAItem, QAListProps } from "@/types/qa";
+import { Pagination } from "@supabase/supabase-js";
 
 export default function QAList({ refreshTrigger }: QAListProps) {
   const [qaList, setQaList] = useState<QAItem[]>([]);
