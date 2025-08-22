@@ -8,21 +8,23 @@ import {
   Sparkles,
   Search,
   Shield,
+  Check,
 } from "lucide-react";
 import { Prompts } from "@/types/prompts";
 
 // API 호출 실패 시 사용할 기본값 (폴백용)
 const DEFAULT_PROMPTS = {
-  queryAnalysis: "",
-  answerGeneration: "",
-  confidenceCheck: "",
+  analyze_query: "",
+  generate_answer: "",
+  assess_confidence: "",
+  generate_final_answer: "",
 };
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState<Prompts>(DEFAULT_PROMPTS);
   const [originalPrompts, setOriginalPrompts] =
     useState<Prompts>(DEFAULT_PROMPTS);
-  const [activeTab, setActiveTab] = useState<keyof Prompts>("queryAnalysis");
+  const [activeTab, setActiveTab] = useState<keyof Prompts>("analyze_query");
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
@@ -30,22 +32,28 @@ export default function PromptsPage() {
 
   const tabs = [
     {
-      id: "queryAnalysis" as const,
+      id: "analyze_query" as const,
       label: "질의분석 프롬프트",
       icon: Search,
       description: "사용자 질문 의도 파악 및 분류",
     },
     {
-      id: "answerGeneration" as const,
+      id: "generate_answer" as const,
       label: "답변생성 프롬프트",
       icon: Sparkles,
       description: "RAG 기반 답변 생성",
     },
     {
-      id: "confidenceCheck" as const,
+      id: "assess_confidence" as const,
       label: "신뢰도검사 프롬프트",
       icon: Shield,
       description: "답변 품질 및 신뢰도 평가",
+    },
+    {
+      id: "generate_final_answer" as const,
+      label: "최종 답변 프롬프트",
+      icon: Check,
+      description: "최종 답변 생성",
     },
   ];
 
@@ -63,9 +71,10 @@ export default function PromptsPage() {
       // API에서 받은 프롬프트 설정
       if (data) {
         const newPrompts = {
-          queryAnalysis: data.queryAnalysisPrompt || "",
-          answerGeneration: data.answerGenerationPrompt || "",
-          confidenceCheck: data.confidenceCheckPrompt || "",
+          analyze_query: data.analyze_query || "",
+          generate_answer: data.generate_answer || "",
+          assess_confidence: data.assess_confidence || "",
+          generate_final_answer: data.generate_final_answer || "",
           lastModified: data.lastModified,
           version: data.version,
         };
@@ -89,9 +98,10 @@ export default function PromptsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          queryAnalysisPrompt: prompts.queryAnalysis,
-          answerGenerationPrompt: prompts.answerGeneration,
-          confidenceCheckPrompt: prompts.confidenceCheck,
+          analyze_query: prompts.analyze_query,
+          generate_answer: prompts.generate_answer,
+          assess_confidence: prompts.assess_confidence,
+          generate_final_answer: prompts.generate_final_answer,
         }),
       });
 
