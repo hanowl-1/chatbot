@@ -7,36 +7,9 @@ import {
   PIPELINE_OPTIONS,
   PipelineVisualization,
 } from "@/components/chatbot/PipelineVisualization";
-
-// AI 모델 목록
-const MODELS = [
-  { value: "gemini-2.0-flash", label: "Gemini Flash 2.0", provider: "google" },
-  { value: "gemini-2.5-flash", label: "Gemini Flash 2.5", provider: "google" },
-  { value: "gpt-4.1", label: "GPT-4.1", provider: "openai" },
-  { value: "gpt-4o", label: "GPT-4o", provider: "openai" },
-  { value: "gpt-5-mini", label: "GPT-5-mini", provider: "openai" },
-  { value: "gpt-5", label: "GPT-5", provider: "openai" },
-];
-
-interface Message {
-  id: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  model?: string;
-  timestamp: Date;
-  pipelineResults?: {
-    queryAnalysis?: any;
-    answerGeneration?: any;
-    confidenceCheck?: any;
-  };
-  selectedPipeline?: string;
-}
-
-interface Prompts {
-  queryAnalysis: string;
-  answerGeneration: string;
-  confidenceCheck: string;
-}
+import { MODELS } from "@/constants/model";
+import { Prompts } from "@/types/prompts";
+import { Message } from "@/types/chat";
 
 export default function ChatbotPage() {
   const [input, setInput] = useState("");
