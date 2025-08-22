@@ -37,7 +37,6 @@ export default function ChatbotPage() {
     try {
       const response = await fetch("/api/prompts");
       const data = await response.json();
-      console.log(data);
 
       if (data) {
         setPrompts({
