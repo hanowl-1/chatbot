@@ -305,7 +305,7 @@ export default function ChatbotPage() {
                             </div>
                             <div className="space-y-2">
                               {message.referencedVectors.map(
-                                (vector, index) => (
+                                (vector: any, index: number) => (
                                   <button
                                     key={vector.qa_id}
                                     onClick={() => {
