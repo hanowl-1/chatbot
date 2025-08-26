@@ -5,6 +5,7 @@ export interface QAItem {
   answer: string;
   updated_at?: string;
   similarity_score?: number;
+  requires_confirmation?: boolean;
 }
 
 export interface QAListProps {

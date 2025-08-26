@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, FileSpreadsheet, Check, X, Download } from "lucide-react";
 import { fetchInstance } from "@/lib/fetchInstance";
 import { QAItem, QAListProps } from "@/types/qa";
 import { Pagination } from "@supabase/supabase-js";
+import * as XLSX from "xlsx";
 
 export default function QAList({ refreshTrigger }: QAListProps) {
   const [qaList, setQaList] = useState<QAItem[]>([]);
@@ -13,10 +14,10 @@ export default function QAList({ refreshTrigger }: QAListProps) {
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const fetchQAList = async (page: number = 1) => {
+  const fetchQAList = async (page: number = 1, size: number = 20) => {
     setLoading(true);
     try {
-      const result = await fetchInstance(`/qa/?page=${page}&size=20`);
+      const result = await fetchInstance(`/qa/?page=${page}&size=${size}`);
 
       if (result && result.data) {
         setQaList(result.data);
@@ -53,6 +54,41 @@ export default function QAList({ refreshTrigger }: QAListProps) {
     }
   };
 
+  const handleExcelDownload = async () => {
+    try {
+      let allData: QAItem[] = [];
+      let page = 1;
+      let hasMore = true;
+
+      // 모든 페이지 순회하며 데이터 수집
+      while (hasMore) {
+        const result = await fetchInstance(`/qa/?page=${page}&size=100`);
+        allData = [...allData, ...result.data];
+        hasMore = result.pagination.has_next;
+        page++;
+      }
+
+      // 엑셀 데이터 준비
+      const excelData = allData.map((item: QAItem) => ({
+        question: item.question,
+        answer: item.answer,
+        slack: item.requires_confirmation,
+      }));
+
+      // 워크시트 생성...
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "QA목록");
+      XLSX.writeFile(
+        wb,
+        `QA목록_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+    } catch (error) {
+      console.error("Failed to download Excel:", error);
+      alert("Excel 다운로드 중 오류가 발생했습니다.");
+    }
+  };
+
   useEffect(() => {
     console.log("refreshTrigger 변경됨:", refreshTrigger);
     fetchQAList(1);
@@ -64,12 +100,26 @@ export default function QAList({ refreshTrigger }: QAListProps) {
         <h3 className="text-lg font-semibold">
           전체 Q-A 목록 {pagination && `(${pagination.total_items}개)`}
         </h3>
-        <button
-          onClick={() => fetchQAList(currentPage)}
-          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
-        >
-          새로고침
-        </button>
+
+        <div className="flex gap-2">
+          <button
+            onClick={handleExcelDownload}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg
+   hover:bg-green-600 flex items-center gap-2 
+  transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Excel 다운로드
+          </button>
+          <button
+            onClick={() => fetchQAList(currentPage)}
+            className="px-4 py-2 bg-gray-100 text-gray-700
+  rounded-lg hover:bg-gray-200 flex items-center gap-2
+  transition-colors"
+          >
+            새로고침
+          </button>
+        </div>
       </div>
 
       {loading ? (
