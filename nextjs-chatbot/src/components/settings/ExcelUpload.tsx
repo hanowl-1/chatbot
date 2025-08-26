@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { FileSpreadsheet, Check, X } from "lucide-react";
-import { fetchInstance } from "@/lib/fetchInstance";
 
 interface ExcelUploadProps {
   onUploadSuccess?: () => void;
@@ -15,7 +14,6 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
     message?: string;
     count?: number;
   } | null>(null);
-  const [sheetName, setSheetName] = useState("Sheet1");
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,37 +29,51 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
     setShowUploadModal(false);
 
     try {
+      // FormData 생성 - File 객체를 직접 사용
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      formData.append("file", selectedFile, selectedFile.name);
 
-      const fileName = selectedFile.name || "FAQ관리.xlsx";
-      const data = await fetchInstance(
-        `/qa/bulk-upload?file_path=${encodeURIComponent(
-          fileName
-        )}&sheet_name=${encodeURIComponent(sheetName)}`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      await fetch("/api/qa-upload", {
+        method: "DELETE",
+      });
+
+      const response = await fetch("/api/qa-upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
 
       setUploadResult({
         success: true,
-        message: `${data.count || 0}개의 QA가 성공적으로 추가되었습니다.`,
-        count: data.count,
+        message: `${
+          data.success_count || data.total_processed || 0
+        }개의 QA가 성공적으로 추가되었습니다.`,
+        count: data.success_count || data.total_processed,
       });
       onUploadSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload error:", error);
-      setUploadResult({
-        success: false,
-        message: "파일 추가 중 오류가 발생했습니다.",
-      });
+
+      // 타임아웃 에러인 경우 특별 처리
+      if (
+        error.message === "This operation was aborted" ||
+        error.name === "AbortError"
+      ) {
+        setUploadResult({
+          success: false,
+          message:
+            "⚠️ 업로드 시간 초과 - 하지만 데이터는 저장되었을 수 있습니다. DB를 확인해주세요.",
+        });
+      } else {
+        setUploadResult({
+          success: false,
+          message: error.message || "파일 추가 중 오류가 발생했습니다.",
+        });
+      }
     } finally {
       setUploadLoading(false);
       // 상태 초기화
       setSelectedFile(null);
-      setSheetName("Sheet1");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -70,11 +82,11 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
 
   return (
     <>
-      {/* Excel 추가 상태 메시지 */}
+      {/* Excel 업로드 상태 메시지 */}
       {uploadLoading && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-          <span className="text-blue-700">Excel 파일 추가 중...</span>
+          <span className="text-blue-700">Excel 파일 업로드 중...</span>
         </div>
       )}
 
@@ -109,33 +121,21 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
         </div>
       )}
 
-      {/* Excel 추가 버튼 */}
+      {/* Excel 업로드 버튼 */}
       <button
         onClick={() => setShowUploadModal(true)}
         className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center gap-2"
       >
         <FileSpreadsheet className="w-4 h-4" />
-        Excel 추가
+        Excel 업로드
       </button>
 
-      {/* Excel 추가 모달 */}
+      {/* Excel 업로드 모달 */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Excel 파일 추가</h3>
+            <h3 className="text-lg font-semibold mb-4">Excel 파일 업로드</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  시트 이름 (기본값: Sheet1)
-                </label>
-                <input
-                  type="text"
-                  value={sheetName}
-                  onChange={(e) => setSheetName(e.target.value)}
-                  placeholder="Sheet1"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Excel 파일 선택
@@ -163,11 +163,18 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
                   </p>
                 )}
               </div>
+              <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded">
+                <p className="font-semibold mb-1">파일 형식 안내:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>지원 형식: .xlsx, .xls</li>
+                  <li>첫 번째 행은 헤더로 인식됩니다</li>
+                  <li>질문과 답변 콜럼이 포함되어야 합니다</li>
+                </ul>
+              </div>
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => {
                     setShowUploadModal(false);
-                    setSheetName("Sheet1");
                     setSelectedFile(null);
                     if (fileInputRef.current) {
                       fileInputRef.current.value = "";
@@ -182,7 +189,7 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
                   disabled={!selectedFile}
                   className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  추가
+                  업로드
                 </button>
               </div>
             </div>
