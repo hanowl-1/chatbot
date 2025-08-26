@@ -20,6 +20,7 @@ const getHeaders = (isFormData: boolean = false) => {
 // RAG API fetch 래퍼
 export async function fetchInstance(endpoint: string, options?: RequestInit) {
   const isFormData = options?.body instanceof FormData;
+
   const response = await fetch(`${RAG_API_URL}${endpoint}`, {
     ...options,
     headers: {

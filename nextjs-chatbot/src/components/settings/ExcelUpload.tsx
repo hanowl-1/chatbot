@@ -34,23 +34,23 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
 
-      // 초기화 단계 스킵 (필요시 주석 해제)
       await fetch("/api/qa-upload", {
         method: "DELETE",
       });
 
-      await fetch("/api/qa-upload", {
+      const response = await fetch("/api/qa-upload", {
         method: "POST",
         body: formData,
       });
+      const data = await response.json();
 
-      // setUploadResult({
-      //   success: true,
-      //   message: `${
-      //     data.processed_count || data.count || 0
-      //   }개의 QA가 성공적으로 추가되었습니다.`,
-      //   count: data.processed_count || data.count,
-      // });
+      setUploadResult({
+        success: true,
+        message: `${
+          data.success_count || data.total_processed || 0
+        }개의 QA가 성공적으로 추가되었습니다.`,
+        count: data.success_count || data.total_processed,
+      });
       onUploadSuccess?.();
     } catch (error: any) {
       console.error("Upload error:", error);
