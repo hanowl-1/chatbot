@@ -11,6 +11,8 @@ import {
   Check,
 } from "lucide-react";
 import { Prompts } from "@/types/prompts";
+import { useAtom } from "jotai";
+import { promptsAtom } from "@/lib/atoms";
 
 // API 호출 실패 시 사용할 기본값 (폴백용)
 const DEFAULT_PROMPTS = {
@@ -21,9 +23,14 @@ const DEFAULT_PROMPTS = {
 };
 
 export default function PromptsPage() {
-  const [prompts, setPrompts] = useState<Prompts>(DEFAULT_PROMPTS);
+  // const [prompts, setPrompts] = useState<Prompts>(DEFAULT_PROMPTS);
+  const [prompts, setPrompts] = useAtom(promptsAtom);
+
+  // const [originalPrompts, setOriginalPrompts] =
+  //   useState<Prompts>(DEFAULT_PROMPTS);
   const [originalPrompts, setOriginalPrompts] =
     useState<Prompts>(DEFAULT_PROMPTS);
+
   const [activeTab, setActiveTab] = useState<keyof Prompts>("analyze_query");
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<
