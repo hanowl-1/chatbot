@@ -139,7 +139,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
                     Q: {item.question}
                   </p>
                   <span className="text-xs text-blue-600 font-semibold ml-2">
-                    qa_id: {item.qa_id}
+                    qa_id: {item.id}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">A: {item.answer}</p>
