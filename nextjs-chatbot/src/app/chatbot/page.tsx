@@ -29,35 +29,32 @@ export default function ChatbotPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // console.log("prompts", prompts);
-  // console.log("selectedPipeline", selectedPipeline);
-
   // 프롬프트 가져오기
-  // useEffect(() => {
-  //   fetchPrompts();
-  // }, []);
+  useEffect(() => {
+    fetchPrompts();
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // const fetchPrompts = async () => {
-  //   try {
-  //     const response = await fetch("/api/prompts");
-  //     const data = await response.json();
+  const fetchPrompts = async () => {
+    try {
+      const response = await fetch("/api/prompts");
+      const data = await response.json();
 
-  //     if (data) {
-  //       setPrompts({
-  //         analyze_query: data.analyze_query || "",
-  //         generate_answer: data.generate_answer || "",
-  //         assess_confidence: data.assess_confidence || "",
-  //         generate_final_answer: data.generate_final_answer || "",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to fetch prompts:", error);
-  //   }
-  // };
+      if (data) {
+        setPrompts({
+          analyze_query: data.analyze_query || "",
+          generate_answer: data.generate_answer || "",
+          assess_confidence: data.assess_confidence || "",
+          generate_final_answer: data.generate_final_answer || "",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch prompts:", error);
+    }
+  };
 
   // 파이프라인 실행
   const handleSend = async () => {
