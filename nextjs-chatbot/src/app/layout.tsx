@@ -7,8 +7,8 @@ import { Provider } from "jotai";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "슈퍼멤버스 챗봇 자동화 테스터",
-  description: "AI 챗봇 테스트 및 관리 시스템",
+  title: "슈퍼멤버스 챗봇 콘솔",
+  description: "AI 챗봇 관리 시스템",
 };
 
 export default function RootLayout({
