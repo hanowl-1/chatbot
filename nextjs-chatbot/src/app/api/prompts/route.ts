@@ -18,8 +18,9 @@ const PROMPT_TYPES = {
 export async function GET() {
   try {
     // Supabase에서 모든 프롬프트 가져오기
+
     const { data, error } = await supabase
-      .from("prompts")
+      .from("heeda_prompts")
       .select("*")
       .order("prompt_type");
 
@@ -111,7 +112,7 @@ export async function PUT(request: NextRequest) {
     for (const update of updates) {
       // 먼저 해당 타입의 프롬프트가 있는지 확인
       const { data: existing } = await supabase
-        .from("prompts")
+        .from("heeda_prompts")
         .select("version")
         .eq("prompt_type", update.type)
         .single();
@@ -119,7 +120,7 @@ export async function PUT(request: NextRequest) {
       if (existing) {
         // 업데이트
         const { data, error } = await supabase
-          .from("prompts")
+          .from("heeda_prompts")
           .update({
             prompt_text: update.text,
             last_modified: new Date().toISOString(),
@@ -134,7 +135,7 @@ export async function PUT(request: NextRequest) {
       } else {
         // 새로 생성
         const { data, error } = await supabase
-          .from("prompts")
+          .from("heeda_prompts")
           .insert({
             prompt_type: update.type,
             prompt_text: update.text,
@@ -150,7 +151,7 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: "Prompts updated successfully",
+      message: "Heda Prompts updated successfully",
       data: results,
     });
   } catch (error) {
