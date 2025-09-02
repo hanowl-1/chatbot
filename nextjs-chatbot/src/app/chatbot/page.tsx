@@ -8,8 +8,9 @@ import {
   PipelineVisualization,
 } from "@/components/chatbot/PipelineVisualization";
 import { MODELS } from "@/constants/model";
-import { Prompts } from "@/types/prompts";
 import { Message } from "@/types/chat";
+import { useAtom } from "jotai";
+import { chatMessagesAtom, promptsAtom } from "@/lib/atoms";
 
 export default function ChatbotPage() {
   const [input, setInput] = useState("");
@@ -18,20 +19,24 @@ export default function ChatbotPage() {
     PIPELINE_OPTIONS[0].value
   );
   const [loading, setLoading] = useState(false);
-  const [prompts, setPrompts] = useState<Prompts>({
-    analyze_query: "",
-    generate_answer: "",
-    assess_confidence: "",
-    generate_final_answer: "",
-  });
-  const [messages, setMessages] = useState<any[]>([]);
+  const [prompts, setPrompts] = useAtom(promptsAtom);
+
+  const [messages, setMessages] = useAtom(chatMessagesAtom);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // 프롬프트 가져오기
   useEffect(() => {
     fetchPrompts();
   }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const fetchPrompts = async () => {
     try {
@@ -51,14 +56,6 @@ export default function ChatbotPage() {
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   // 파이프라인 실행
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -77,13 +74,13 @@ export default function ChatbotPage() {
     try {
       // API 호출 - 최종 답변일 때는 scope 필드 제외
       const requestBody: any = {
-        model: selectedModel,
         question: input,
+        embedding_count: 3,
         analyze_query_prompt: prompts.analyze_query,
         generate_answer_prompt: prompts.generate_answer,
         assess_confidence_prompt: prompts.assess_confidence,
         generate_final_answer_prompt: prompts.generate_final_answer,
-        embedding_count: 3,
+        model: selectedModel,
       };
 
       // 최종 답변이 아닐 때만 scope 추가
@@ -104,14 +101,7 @@ export default function ChatbotPage() {
         // query_analysis가 객체인 경우 JSON 문자열로 변환
         content =
           typeof data.query_analysis === "object"
-            ? JSON.stringify(
-                {
-                  ...data.query_analysis,
-                  refined_questions: data.refined_questions,
-                },
-                null,
-                2
-              )
+            ? JSON.stringify(data.query_analysis, null, 2)
             : data.query_analysis;
       } else if (
         selectedPipeline === "generate_answer" &&
@@ -126,7 +116,7 @@ export default function ChatbotPage() {
           typeof data.confidence_assessment === "object"
             ? JSON.stringify(data.confidence_assessment, null, 2)
             : data.confidence_assessment;
-      } else if (selectedPipeline === "" && data.final_answer) {
+      } else if (selectedPipeline === "all" && data.final_answer) {
         content = data.final_answer;
       }
 
@@ -381,15 +371,18 @@ export default function ChatbotPage() {
         {/* 입력 영역 */}
         <div className="bg-white border-t p-4 rounded-b-lg">
           <div className="flex gap-2">
-            <input
-              type="text"
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && !e.shiftKey && handleSend()
-              }
-              placeholder="질문을 입력하세요..."
-              className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
+              className="flex-1 p-2 border rounded-lg resize-none"
+              rows={3}
               disabled={loading}
             />
             <button
