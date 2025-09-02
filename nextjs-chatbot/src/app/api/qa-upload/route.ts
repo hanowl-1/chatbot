@@ -21,10 +21,17 @@ export async function POST(request: NextRequest) {
     // FormData 가져오기
     const formData = await request.formData();
 
-    const data = await fetchInstance(`/qa/bulk-upload`, {
+    const response = await fetch(`${process.env.RAG_API_URL}/qa/bulk-upload`, {
       method: "POST",
       body: formData,
+      headers: {
+        Authorization: `Bearer ${process.env.RAG_MASTER_TOKEN}`,
+      },
     });
+    if (!response.ok) {
+      throw new Error("Upload failed");
+    }
+    const data = await response.json();
 
     return NextResponse.json(data);
   } catch (error) {
