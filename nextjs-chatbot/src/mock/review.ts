@@ -9,6 +9,7 @@ export interface PendingReview {
   status: "pending" | "reviewed" | "resolved";
   reviewedBy?: string;
   reviewedAt?: Date;
+  shouldSendAiAnswer?: boolean; // AI 답변 전송 여부 (기본값: false)
 }
 
 // 더미 데이터 (API 개발 전)
@@ -23,6 +24,7 @@ export const DUMMY_DATA: PendingReview[] = [
     chatRoomName: "고객상담방 A",
     timestamp: new Date("2024-01-20T10:30:00"),
     status: "pending",
+    shouldSendAiAnswer: false,
   },
   {
     id: "2",
@@ -33,6 +35,7 @@ export const DUMMY_DATA: PendingReview[] = [
     chatRoomName: "고객상담방 B",
     timestamp: new Date("2024-01-20T11:15:00"),
     status: "pending",
+    shouldSendAiAnswer: false,
   },
   {
     id: "3",
@@ -45,5 +48,6 @@ export const DUMMY_DATA: PendingReview[] = [
     status: "reviewed",
     reviewedBy: "운영자1",
     reviewedAt: new Date("2024-01-20T10:00:00"),
+    shouldSendAiAnswer: false,
   },
 ];

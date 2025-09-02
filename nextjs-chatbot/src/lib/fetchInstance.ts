@@ -1,27 +1,20 @@
-// RAG API 직접 호출을 위한 간단한 클라이언트
-
-const RAG_API_URL =
-  process.env.NEXT_PUBLIC_RAG_API_URL || "https://rag.supermembers.co.kr";
-const RAG_TOKEN =
-  process.env.NEXT_PUBLIC_RAG_MASTER_TOKEN ||
-  "85f5e10431f69bc2a14046a13aabaefc660103b6de7a84f75c4b96181d03f0b5";
+// 토큰은 서버에서만 처리되므로 브라우저에 노출되지 않음
 
 // 기본 헤더 (FormData일 때는 Content-Type 제외)
 const getHeaders = (isFormData: boolean = false) => {
-  const headers: any = {
-    Authorization: `Bearer ${RAG_TOKEN}`,
-  };
+  const headers: any = {};
   if (!isFormData) {
     headers["Content-Type"] = "application/json";
   }
   return headers;
 };
 
-// RAG API fetch 래퍼
 export async function fetchInstance(endpoint: string, options?: RequestInit) {
   const isFormData = options?.body instanceof FormData;
 
-  const response = await fetch(`${RAG_API_URL}${endpoint}`, {
+  const proxyUrl = `/api/proxy${endpoint}`;
+
+  const response = await fetch(proxyUrl, {
     ...options,
     headers: {
       ...getHeaders(isFormData),

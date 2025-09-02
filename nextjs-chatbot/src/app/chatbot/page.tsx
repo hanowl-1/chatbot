@@ -137,7 +137,7 @@ export default function ChatbotPage() {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "오류가 발생했습니다. 다시 시도해주세요.",
+        content: `오류가 발생했습니다 : ${error}`,
         model: selectedModel,
         timestamp: new Date(),
       };
