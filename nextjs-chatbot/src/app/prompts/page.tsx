@@ -17,6 +17,7 @@ import { promptsAtom } from "@/lib/atoms";
 // API 호출 실패 시 사용할 기본값 (폴백용)
 const DEFAULT_PROMPTS = {
   analyze_query: "",
+  refine_question: "",
   generate_answer: "",
   assess_confidence: "",
   generate_final_answer: "",
@@ -43,6 +44,12 @@ export default function PromptsPage() {
       label: "질의분석 프롬프트",
       icon: Search,
       description: "사용자 질문 의도 파악 및 분류",
+    },
+    {
+      id: "refine_question" as const,
+      label: "질의 재정의 프롬프트",
+      icon: RotateCcw,
+      description: "사용자 질문 재구성",
     },
     {
       id: "generate_answer" as const,
@@ -80,6 +87,7 @@ export default function PromptsPage() {
         const newPrompts = {
           analyze_query: data.analyze_query || "",
           generate_answer: data.generate_answer || "",
+          refine_question: data.refine_question || "",
           assess_confidence: data.assess_confidence || "",
           generate_final_answer: data.generate_final_answer || "",
           lastModified: data.lastModified,
@@ -106,6 +114,7 @@ export default function PromptsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           analyze_query: prompts.analyze_query,
+          refine_question: prompts.refine_question,
           generate_answer: prompts.generate_answer,
           assess_confidence: prompts.assess_confidence,
           generate_final_answer: prompts.generate_final_answer,

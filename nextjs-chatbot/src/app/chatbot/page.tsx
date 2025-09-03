@@ -46,6 +46,7 @@ export default function ChatbotPage() {
       if (data) {
         setPrompts({
           analyze_query: data.analyze_query || "",
+          refine_question: data.refine_question || "",
           generate_answer: data.generate_answer || "",
           assess_confidence: data.assess_confidence || "",
           generate_final_answer: data.generate_final_answer || "",
@@ -77,6 +78,7 @@ export default function ChatbotPage() {
         question: input,
         embedding_count: 3,
         analyze_query_prompt: prompts.analyze_query,
+        refine_question_prompt: prompts.refine_question,
         generate_answer_prompt: prompts.generate_answer,
         assess_confidence_prompt: prompts.assess_confidence,
         generate_final_answer_prompt: prompts.generate_final_answer,
@@ -88,7 +90,7 @@ export default function ChatbotPage() {
         requestBody.scope = selectedPipeline;
       }
 
-      const data = await fetchInstance(`/qa/rag-test`, {
+      const data = await fetchInstance(`/qa/rag-test/v2`, {
         method: "POST",
         body: JSON.stringify(requestBody),
       });
@@ -103,6 +105,11 @@ export default function ChatbotPage() {
           typeof data.query_analysis === "object"
             ? JSON.stringify(data.query_analysis, null, 2)
             : data.query_analysis;
+      } else if (
+        selectedPipeline === "refine_question" &&
+        data.refined_question
+      ) {
+        content = data.refined_question;
       } else if (
         selectedPipeline === "generate_answer" &&
         data.raw_generated_answer
