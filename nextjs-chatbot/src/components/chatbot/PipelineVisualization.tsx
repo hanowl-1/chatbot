@@ -1,4 +1,11 @@
-import { Search, Sparkles, Shield, ArrowRight, Check } from "lucide-react";
+import {
+  Search,
+  Sparkles,
+  Shield,
+  ArrowRight,
+  Check,
+  RotateCcw,
+} from "lucide-react";
 
 export const PIPELINE_OPTIONS = [
   {
@@ -8,21 +15,38 @@ export const PIPELINE_OPTIONS = [
     description: "사용자 질문 의도 파악 및 분류",
   },
   {
+    value: "refine_question",
+    label: "질의분석 + 질의 재정의",
+    stages: ["analyze_query", "refine_question"],
+    description: "사용자 질문 재구성",
+  },
+  {
     value: "generate_answer",
-    label: "질의분석 + 답변생성",
-    stages: ["analyze_query", "generate_answer"],
+    label: "질의분석 + 질의 재정의 + 답변생성",
+    stages: ["analyze_query", "refine_question", "generate_answer"],
     description: "질문 분석 후 RAG 기반 답변 생성",
   },
   {
     value: "assess_confidence",
-    label: "질의분석 + 답변생성 + 신뢰도 검사",
-    stages: ["analyze_query", "generate_answer", "assess_confidence"],
+    label: "질의분석 + 질의 재정의 + 답변생성 + 신뢰도 검사",
+    stages: [
+      "analyze_query",
+      "refine_question",
+      "generate_answer",
+      "assess_confidence",
+    ],
     description: "RAG 기반 답변 생성 후 신뢰도 검사",
   },
   {
     value: "all",
     label: "최종 답변",
-    stages: ["analyze_query", "generate_answer", "assess_confidence", "all"],
+    stages: [
+      "analyze_query",
+      "refine_question",
+      "generate_answer",
+      "assess_confidence",
+      "all",
+    ],
     description: "신뢰도 검증까지 모든 단계 실행",
   },
 ];
@@ -46,6 +70,22 @@ export const PipelineVisualization = ({ selected }: { selected: string }) => {
       </div>
 
       {stages.includes("analyze_query") &&
+        stages.includes("refine_question") && (
+          <ArrowRight className="w-4 h-4 text-gray-400" />
+        )}
+
+      <div
+        className={`flex items-center gap-1 px-2 py-1 rounded ${
+          stages.includes("refine_question")
+            ? "bg-amber-100 text-amber-700"
+            : "bg-gray-200 text-gray-400"
+        }`}
+      >
+        <RotateCcw className="w-3 h-3" />
+        <span className="text-xs font-medium">질의 재정의</span>
+      </div>
+
+      {stages.includes("refine_question") &&
         stages.includes("generate_answer") && (
           <ArrowRight className="w-4 h-4 text-gray-400" />
         )}

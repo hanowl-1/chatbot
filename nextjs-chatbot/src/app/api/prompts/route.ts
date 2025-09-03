@@ -10,6 +10,8 @@ const supabase = createClient(
 // 프롬프트 타입 정의
 const PROMPT_TYPES = {
   QUERY_ANALYSIS: "query_analysis",
+  // refine_question 프롬프트 타입 추가
+  REFINE_QUESTION: "refine_question",
   ANSWER_GENERATION: "answer_generation",
   CONFIDENCE_CHECK: "confidence_check",
   FINAL_ANSWER: "final_answer",
@@ -28,6 +30,8 @@ export async function GET() {
       // 데이터가 없으면 기본값 반환
       return NextResponse.json({
         analyze_query: "당신은 사용자 질문을 분석하는 AI입니다.",
+        // 기본값에 refine_question 포함
+        refine_question: "사용자 질문을 더 명확한 질의로 재정의하세요.",
         generate_answer:
           "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
         assess_confidence:
@@ -47,6 +51,9 @@ export async function GET() {
     // API 응답 형식 맞추기
     return NextResponse.json({
       analyze_query: promptsMap[PROMPT_TYPES.QUERY_ANALYSIS]?.prompt_text || "",
+      // refine_question 응답 포함
+      refine_question:
+        promptsMap[PROMPT_TYPES.REFINE_QUESTION]?.prompt_text || "",
       generate_answer:
         promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.prompt_text || "",
       assess_confidence:
@@ -58,6 +65,7 @@ export async function GET() {
         new Date().toISOString(),
       version: Math.max(
         promptsMap[PROMPT_TYPES.QUERY_ANALYSIS]?.version || 1,
+        promptsMap[PROMPT_TYPES.REFINE_QUESTION]?.version || 1,
         promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.version || 1,
         promptsMap[PROMPT_TYPES.CONFIDENCE_CHECK]?.version || 1,
         promptsMap[PROMPT_TYPES.FINAL_ANSWER]?.version || 1
@@ -67,6 +75,8 @@ export async function GET() {
     console.error("Error fetching prompts:", error);
     return NextResponse.json({
       analyze_query: "당신은 사용자 질문을 분석하는 AI입니다.",
+      // 에러 폴백에도 refine_question 포함
+      refine_question: "사용자 질문을 더 명확한 질의로 재정의하세요.",
       generate_answer: "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
       assess_confidence: "당신은 AI 답변의 품질을 평가하는 검증 시스템입니다.",
       generate_final_answer: "당신은 최종 답변을 생성하는 AI입니다.",
@@ -81,6 +91,8 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const {
       analyze_query,
+      // 요청 body에서 refine_question 수용
+      refine_question,
       generate_answer,
       assess_confidence,
       generate_final_answer,
@@ -91,6 +103,11 @@ export async function PUT(request: NextRequest) {
       {
         type: PROMPT_TYPES.QUERY_ANALYSIS,
         text: analyze_query,
+      },
+      {
+        // refine_question 업데이트 추가
+        type: PROMPT_TYPES.REFINE_QUESTION,
+        text: refine_question,
       },
       {
         type: PROMPT_TYPES.ANSWER_GENERATION,

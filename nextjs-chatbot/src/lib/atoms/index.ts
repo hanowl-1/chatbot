@@ -8,6 +8,7 @@ export const chatMessagesAtom = atom<Message[]>([]);
 // 프롬프트 atom
 export const promptsAtom = atom<Prompts>({
   analyze_query: "",
+  refine_question: "",
   generate_answer: "",
   assess_confidence: "",
   generate_final_answer: "",
