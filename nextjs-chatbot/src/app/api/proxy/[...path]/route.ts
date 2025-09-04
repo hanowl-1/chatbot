@@ -3,11 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 const RAG_API_URL = process.env.RAG_API_URL;
 const RAG_TOKEN = process.env.RAG_MASTER_TOKEN;
 
-// 디버깅용 로그 (프로덕션에서는 제거하세요!)
-console.log("RAG_API_URL:", RAG_API_URL);
-console.log("RAG_TOKEN exists:", !!RAG_TOKEN);
-console.log("RAG_TOKEN length:", RAG_TOKEN?.length);
-
 // 모든 HTTP 메서드 지원
 export async function GET(
   request: NextRequest,
@@ -45,7 +40,6 @@ async function handleRequest(
   try {
     // RAG API 엔드포인트 재구성
     let endpoint = "/" + pathSegments.join("/");
-
     // /qa 엔드포인트는 항상 끝 슬래시가 필요함
     // RAG API의 특성상 /qa는 /qa/로 리다이렉트됨
     if (endpoint === "/qa" || endpoint.startsWith("/qa?")) {
@@ -58,15 +52,6 @@ async function handleRequest(
     const { searchParams } = new URL(request.url);
     const queryString = searchParams.toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
-
-    // 디버깅 로그
-    console.log("Proxy Request:", {
-      method,
-      endpoint,
-      fullUrl,
-      hasToken: !!RAG_TOKEN,
-      tokenLength: RAG_TOKEN?.length,
-    });
 
     // 요청 헤더 준비 (토큰은 서버에서만!)
     const headers: HeadersInit = {
@@ -95,11 +80,12 @@ async function handleRequest(
       }
     }
 
+    console.log("body", body);
     // RAG API로 요청 전달
     const response = await fetch(fullUrl, {
       method,
       headers,
-      body,
+      body: body || undefined,
     });
 
     // 디버깅: 응답 상태 로그
