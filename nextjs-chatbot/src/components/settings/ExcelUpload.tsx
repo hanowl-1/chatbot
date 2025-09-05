@@ -11,7 +11,7 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     success?: boolean;
-    message?: string;
+    message?: string | React.ReactNode;
     count?: number;
   } | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -29,47 +29,70 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
     setShowUploadModal(false);
 
     try {
-      // FormData 생성 - File 객체를 직접 사용
+      // FormData 생성 - 전체 File 객체를 서버로 전송
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
 
+      // 기존 QA 데이터 삭제
       await fetch("/api/qa-upload", {
         method: "DELETE",
       });
 
+      // QA 데이터 추가 (서버에서 청킹 처리)
       const response = await fetch("/api/qa-upload", {
         method: "POST",
         body: formData,
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Upload failed");
+      }
+      
       const data = await response.json();
+      console.log("Upload response:", data);
 
-      setUploadResult({
-        success: true,
-        message: `${
-          data.success_count || data.total_processed || 0
-        }개의 QA가 성공적으로 추가되었습니다.`,
-        count: data.success_count || data.total_processed,
-      });
-      onUploadSuccess?.();
-    } catch (error: any) {
-      console.error("Upload error:", error);
-
-      // 타임아웃 에러인 경우 특별 처리
-      if (
-        error.message === "This operation was aborted" ||
-        error.name === "AbortError"
-      ) {
+      // GitHub Actions 백그라운드 처리 결과 반영
+      if (data.workflowUrl) {
+        // GitHub Actions 방식
         setUploadResult({
-          success: false,
-          message:
-            "⚠️ 업로드 시간 초과 - 하지만 데이터는 저장되었을 수 있습니다. DB를 확인해주세요.",
+          success: data.success,
+          message: (
+            <>
+              {data.message}
+              <br />
+              <a 
+                href={data.workflowUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 underline hover:text-blue-800"
+              >
+                GitHub Actions에서 진행 상황 보기 →
+              </a>
+            </>
+          ) as any,
+          count: 0,
         });
       } else {
+        // 기존 방식
         setUploadResult({
-          success: false,
-          message: error.message || "파일 추가 중 오류가 발생했습니다.",
+          success: data.success,
+          message:
+            data.message ||
+            `처리 완료: 성공 ${data.successCount}개, 실패 ${data.failCount}개 (총 ${data.totalChunks}개 청크)`,
+          count: data.successCount || data.totalRows,
         });
       }
+      
+      if (data.success) {
+        onUploadSuccess?.();
+      }
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      setUploadResult({
+        success: false,
+        message: error.message || "파일 업로드 중 오류가 발생했습니다.",
+      });
     } finally {
       setUploadLoading(false);
       // 상태 초기화
@@ -86,7 +109,9 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
       {uploadLoading && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-          <span className="text-blue-700">Excel 파일 업로드 중...</span>
+          <span className="text-blue-700">
+            Excel 파일 업로드 중... (서버에서 처리 중입니다. 페이지를 이동하셔도 됩니다.)
+          </span>
         </div>
       )}
 
