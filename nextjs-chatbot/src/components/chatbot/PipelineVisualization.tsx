@@ -1,54 +1,61 @@
 import {
-  Search,
+  // Search,
   Sparkles,
   Shield,
   ArrowRight,
-  Check,
+  // Check,
   RotateCcw,
 } from "lucide-react";
 
 export const PIPELINE_OPTIONS = [
-  {
-    value: "analyze_query",
-    label: "질의분석",
-    stages: ["analyze_query"],
-    description: "사용자 질문 의도 파악 및 분류",
-  },
+  // 질의분석 주석처리
+  // {
+  //   value: "analyze_query",
+  //   label: "질의분석",
+  //   stages: ["analyze_query"],
+  //   description: "사용자 질문 의도 파악 및 분류",
+  // },
+  // {
+  //   value: "refine_question",
+  //   label: "질의분석 + 질의 재정의",
+  //   stages: ["analyze_query", "refine_question"],
+  //   description: "사용자 질문 재구성",
+  // },
   {
     value: "refine_question",
-    label: "질의분석 + 질의 재정의",
-    stages: ["analyze_query", "refine_question"],
+    label: "질의 재정의",
+    stages: ["refine_question"],
     description: "사용자 질문 재구성",
   },
   {
     value: "generate_answer",
-    label: "질의분석 + 질의 재정의 + 답변생성",
-    stages: ["analyze_query", "refine_question", "generate_answer"],
-    description: "질문 분석 후 RAG 기반 답변 생성",
+    label: "질의 재정의 + 답변생성",
+    stages: ["refine_question", "generate_answer"],
+    description: "질문 재구성 후 RAG 기반 답변 생성",
   },
   {
     value: "assess_confidence",
-    label: "질의분석 + 질의 재정의 + 답변생성 + 신뢰도 검사",
+    label: "질의 재정의 + 답변생성 + 신뢰도 검사",
     stages: [
-      "analyze_query",
       "refine_question",
       "generate_answer",
       "assess_confidence",
     ],
     description: "RAG 기반 답변 생성 후 신뢰도 검사",
   },
-  {
-    value: "all",
-    label: "최종 답변",
-    stages: [
-      "analyze_query",
-      "refine_question",
-      "generate_answer",
-      "assess_confidence",
-      "all",
-    ],
-    description: "신뢰도 검증까지 모든 단계 실행",
-  },
+  // 최종답변 주석처리
+  // {
+  //   value: "all",
+  //   label: "최종 답변",
+  //   stages: [
+  //     "analyze_query",
+  //     "refine_question",
+  //     "generate_answer",
+  //     "assess_confidence",
+  //     "all",
+  //   ],
+  //   description: "신뢰도 검증까지 모든 단계 실행",
+  // },
 ];
 
 // 파이프라인 시각화 컴포넌트
@@ -58,7 +65,8 @@ export const PipelineVisualization = ({ selected }: { selected: string }) => {
 
   return (
     <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-      <div
+      {/* 질의분석 주석처리 */}
+      {/* <div
         className={`flex items-center gap-1 px-2 py-1 rounded ${
           stages.includes("analyze_query")
             ? "bg-blue-100 text-blue-700"
@@ -72,7 +80,7 @@ export const PipelineVisualization = ({ selected }: { selected: string }) => {
       {stages.includes("analyze_query") &&
         stages.includes("refine_question") && (
           <ArrowRight className="w-4 h-4 text-gray-400" />
-        )}
+        )} */}
 
       <div
         className={`flex items-center gap-1 px-2 py-1 rounded ${
@@ -116,7 +124,8 @@ export const PipelineVisualization = ({ selected }: { selected: string }) => {
         <span className="text-xs font-medium">신뢰도</span>
       </div>
 
-      {stages.includes("assess_confidence") && stages.includes("all") && (
+      {/* 최종답변 주석처리 */}
+      {/* {stages.includes("assess_confidence") && stages.includes("all") && (
         <ArrowRight className="w-4 h-4 text-gray-400" />
       )}
       <div
@@ -128,7 +137,7 @@ export const PipelineVisualization = ({ selected }: { selected: string }) => {
       >
         <Check className="w-3 h-3" />
         <span className="text-xs font-medium">최종 답변</span>
-      </div>
+      </div> */}
     </div>
   );
 };

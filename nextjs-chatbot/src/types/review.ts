@@ -20,3 +20,5 @@ export interface ReviewChatDialog {
   message: string;
   sender_type: string;
 }
+
+export type ReviewTabType = "confirmed" | "waiting";
