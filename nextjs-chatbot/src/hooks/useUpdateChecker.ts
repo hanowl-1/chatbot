@@ -21,7 +21,7 @@ export function useUpdateChecker({
   const getActualReviewCount = useCallback(async () => {
     try {
       const result = await fetchInstance(
-        "/chatrooms/answers?has_assignee=false&requires_confirmation=true&is_confirmed=false&page=1&size=5"
+        "/chatrooms/answers?has_assignee=false&requires_confirmation=true&has_slash_in_name=true&is_confirmed=false&page=1&size=5"
       );
       return result.pagination?.total_items || 0;
     } catch (error) {
@@ -38,9 +38,6 @@ export function useUpdateChecker({
     try {
       const actualReviewCount = await getActualReviewCount();
       const newItemsCount = Math.max(0, actualReviewCount - currentReviewCount);
-      // console.log("newItemsCount", newItemsCount);
-      // console.log("actualReviewCount", actualReviewCount);
-      // console.log("currentReviewCount", currentReviewCount);
 
       if (newItemsCount > 0) {
         setHasUpdates(true);

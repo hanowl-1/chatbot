@@ -22,10 +22,11 @@ export function useReviewData({ activeTab, page }: UseReviewDataProps) {
       setLoading(true);
       try {
         const isConfirmed = currentTab === "confirmed";
+        // 슬래시 필터링 쿼리 파라미터 추가"";
         const data = await fetchInstance(
-          `/chatrooms/answers?has_assignee=false&requires_confirmation=true&is_confirmed=${isConfirmed}&page=${currentPage}&size=${size}`
+          `/chatrooms/answers?has_assignee=false&requires_confirmation=true&has_slash_in_name=true&is_confirmed=${isConfirmed}&page=${currentPage}&size=${size}`
         );
-        
+
         setReviews(data.data || []);
         setTotalItems(data.pagination?.total_items || 0);
         setTotalPages(data.pagination?.total_pages || 1);
@@ -48,7 +49,8 @@ export function useReviewData({ activeTab, page }: UseReviewDataProps) {
 
   // 페이지 변경 시 데이터 불러오기
   useEffect(() => {
-    if (page > 1) {  // 첫 페이지는 탭 변경 시 이미 로드됨
+    if (page > 1) {
+      // 첫 페이지는 탭 변경 시 이미 로드됨
       fetchReviewData(activeTab, page);
     }
   }, [page, activeTab, fetchReviewData]);
