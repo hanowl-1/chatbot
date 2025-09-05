@@ -33,7 +33,7 @@ export default function ReviewHeader({
             {activeTab === "waiting" ? "검증 대기 질문" : "검증 완료 질문"}
           </h2>
           <p className="text-gray-600 mt-1">
-            신뢰도가 낮은 AI 답변을 검토하고 직접 응답해주세요
+            신뢰도가 낮은 AI 답변을 검증하고 직접 응답해주세요
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -55,7 +55,7 @@ export default function ReviewHeader({
               </label>
             </div>
           )}
-          
+
           {/* 새로고침 버튼 */}
           <button
             onClick={refreshData}
@@ -101,7 +101,7 @@ export default function ReviewHeader({
           </>
         ) : (
           <>
-            검토 완료된 항목:{" "}
+            검증 완료된 항목:{" "}
             <span className="font-bold text-green-600">{totalItems}개</span>
           </>
         )}

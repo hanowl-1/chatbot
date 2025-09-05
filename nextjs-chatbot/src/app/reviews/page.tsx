@@ -181,15 +181,15 @@ export default function ReviewsPage() {
         {loading ? (
           <Loading
             size="lg"
-            text="검토 대기 질문을 불러오는 중..."
+            text="검증 대기 질문을 불러오는 중..."
             className="py-12"
           />
         ) : reviews.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center text-gray-500">
             <MessageSquareWarning className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             {activeTab === "waiting"
-              ? "검토 대기 중인 질문이 없습니다"
-              : "검토 완료된 질문이 없습니다"}
+              ? "검증 대기 중인 질문이 없습니다"
+              : "검증 완료된 질문이 없습니다"}
           </div>
         ) : (
           reviews.map((filteredReview) => {
