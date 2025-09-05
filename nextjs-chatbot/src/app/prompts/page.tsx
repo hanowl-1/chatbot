@@ -32,19 +32,20 @@ export default function PromptsPage() {
   const [originalPrompts, setOriginalPrompts] =
     useState<Prompts>(DEFAULT_PROMPTS);
 
-  const [activeTab, setActiveTab] = useState<keyof Prompts>("analyze_query");
+  // const [activeTab, setActiveTab] = useState<keyof Prompts>("analyze_query");
+  const [activeTab, setActiveTab] = useState<keyof Prompts>("refine_question");
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
 
   const tabs = [
-    {
-      id: "analyze_query" as const,
-      label: "질의분석 프롬프트",
-      icon: Search,
-      description: "사용자 질문 의도 파악 및 분류",
-    },
+    // {
+    //   id: "analyze_query" as const,
+    //   label: "질의분석 프롬프트",
+    //   icon: Search,
+    //   description: "사용자 질문 의도 파악 및 분류",
+    // },
     {
       id: "refine_question" as const,
       label: "질의 재정의 프롬프트",
@@ -63,12 +64,12 @@ export default function PromptsPage() {
       icon: Shield,
       description: "답변 품질 및 신뢰도 평가",
     },
-    {
-      id: "generate_final_answer" as const,
-      label: "최종 답변 프롬프트",
-      icon: Check,
-      description: "최종 답변 생성",
-    },
+    // {
+    //   id: "generate_final_answer" as const,
+    //   label: "최종 답변 프롬프트",
+    //   icon: Check,
+    //   description: "최종 답변 생성",
+    // },
   ];
 
   // 프롬프트 불러오기

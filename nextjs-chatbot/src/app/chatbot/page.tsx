@@ -45,11 +45,13 @@ export default function ChatbotPage() {
 
       if (data) {
         setPrompts({
-          analyze_query: data.analyze_query || "",
+          // analyze_query: data.analyze_query || "",
+          analyze_query: "",
           refine_question: data.refine_question || "",
           generate_answer: data.generate_answer || "",
           assess_confidence: data.assess_confidence || "",
-          generate_final_answer: data.generate_final_answer || "",
+          // generate_final_answer: data.generate_final_answer || "",
+          generate_final_answer: "",
         });
       }
     } catch (error) {
@@ -77,11 +79,11 @@ export default function ChatbotPage() {
       const requestBody: any = {
         question: input,
         embedding_count: 3,
-        analyze_query_prompt: prompts.analyze_query,
+        // analyze_query_prompt: prompts.analyze_query,
         refine_question_prompt: prompts.refine_question,
         generate_answer_prompt: prompts.generate_answer,
         assess_confidence_prompt: prompts.assess_confidence,
-        generate_final_answer_prompt: prompts.generate_final_answer,
+        // generate_final_answer_prompt: prompts.generate_final_answer,
         model: selectedModel,
       };
 
@@ -99,13 +101,15 @@ export default function ChatbotPage() {
       let content = "답변을 생성할 수 없습니다.";
 
       // 파이프라인에 따라 적절한 응답 선택
-      if (selectedPipeline === "analyze_query" && data.query_analysis) {
-        // query_analysis가 객체인 경우 JSON 문자열로 변환
-        content =
-          typeof data.query_analysis === "object"
-            ? JSON.stringify(data.query_analysis, null, 2)
-            : data.query_analysis;
-      } else if (
+      // 질의분석 주석처리
+      // if (selectedPipeline === "analyze_query" && data.query_analysis) {
+      //   // query_analysis가 객체인 경우 JSON 문자열로 변환
+      //   content =
+      //     typeof data.query_analysis === "object"
+      //       ? JSON.stringify(data.query_analysis, null, 2)
+      //       : data.query_analysis;
+      // } else if (
+      if (
         selectedPipeline === "refine_question" &&
         data.refined_question
       ) {
@@ -123,9 +127,11 @@ export default function ChatbotPage() {
           typeof data.confidence_assessment === "object"
             ? JSON.stringify(data.confidence_assessment, null, 2)
             : data.confidence_assessment;
-      } else if (selectedPipeline === "all" && data.final_answer) {
-        content = data.final_answer;
-      }
+      } 
+      // 최종답변 주석처리
+      // else if (selectedPipeline === "all" && data.final_answer) {
+      //   content = data.final_answer;
+      // }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
