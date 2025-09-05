@@ -2,37 +2,26 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchInstance } from "@/lib/fetchInstance";
 
 interface UseUpdateCheckerProps {
-  currentMaxId: number | null;
   currentReviewCount?: number; // 현재 페이지의 리뷰 개수
   interval?: number; // 폴링 간격 (ms)
   enabled?: boolean; // 폴링 활성화 여부
-  onUpdate?: (latestId: number) => void; // 업데이트 감지 시 콜백
 }
 
 export function useUpdateChecker({
-  currentMaxId,
   currentReviewCount = 0,
   interval = 60000,
   enabled = true,
-  onUpdate,
 }: UseUpdateCheckerProps) {
-  // const [latestId, setLatestId] = useState<number | null>(null);
   const [hasUpdates, setHasUpdates] = useState(false);
   const [updateCount, setUpdateCount] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // onUpdate를 ref로 저장하여 의존성 문제 해결
-  const onUpdateRef = useRef(onUpdate);
-  useEffect(() => {
-    onUpdateRef.current = onUpdate;
-  }, [onUpdate]);
-
   // 실제 검증 대기 개수 가져오기
-  const getActualPendingCount = useCallback(async () => {
+  const getActualReviewCount = useCallback(async () => {
     try {
       const result = await fetchInstance(
-        "/chatrooms/answers?requires_confirmation=true&is_confirmed=false&page=1&size=100"
+        "/chatrooms/answers?has_assignee=false&requires_confirmation=true&is_confirmed=false&page=1&size=5"
       );
       return result.pagination?.total_items || 0;
     } catch (error) {
@@ -41,48 +30,31 @@ export function useUpdateChecker({
     }
   }, []);
 
-  // 최신 ID 체크
+  // 업데이트 여부 확인
   const checkForUpdates = useCallback(async () => {
-    if (!enabled || currentMaxId === null) return;
+    if (!enabled || currentReviewCount === 0) return;
 
-    // isChecking을 ref로 체크하지 않고 early return 제거
     setIsChecking(true);
     try {
-      // const result = await fetchInstance("/chatrooms/answers/latest-id");
-      // const newLatestId = result.latest_answer_id;
-
-      // setLatestId(newLatestId);
-
-      // 업데이트 여부 확인
-      // 실제 검증 대기 개수 확인
-      const actualPendingCount = await getActualPendingCount();
-      const newItemsCount = Math.max(
-        0,
-        actualPendingCount - currentReviewCount
-      );
-      console.log("newItemsCount", newItemsCount);
-      console.log("actualPendingCount", actualPendingCount);
-      console.log("currentReviewCount", currentReviewCount);
+      const actualReviewCount = await getActualReviewCount();
+      const newItemsCount = Math.max(0, actualReviewCount - currentReviewCount);
+      // console.log("newItemsCount", newItemsCount);
+      // console.log("actualReviewCount", actualReviewCount);
+      // console.log("currentReviewCount", currentReviewCount);
 
       if (newItemsCount > 0) {
         setHasUpdates(true);
         setUpdateCount(newItemsCount);
-        onUpdate?.(actualPendingCount);
       } else {
         setHasUpdates(false);
         setUpdateCount(0);
-      }
-
-      // 콜백 호출 - ref 사용
-      if (onUpdateRef.current) {
-        onUpdateRef.current(actualPendingCount);
       }
     } catch (error) {
       console.error("Failed to check for updates:", error);
     } finally {
       setIsChecking(false);
     }
-  }, [currentMaxId, enabled, getActualPendingCount, currentReviewCount]);
+  }, [enabled, getActualReviewCount, currentReviewCount]);
 
   // 폴링 설정
   useEffect(() => {
@@ -144,7 +116,6 @@ export function useUpdateChecker({
   return {
     hasUpdates,
     updateCount,
-    // latestId,
     isChecking,
     resetUpdates,
   };

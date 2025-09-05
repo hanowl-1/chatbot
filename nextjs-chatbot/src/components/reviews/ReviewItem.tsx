@@ -19,15 +19,13 @@ import { CHANNEL_ID } from "@/constants/channel";
 interface ReviewItemProps {
   filteredReview: PendingReview;
   activeTab: "waiting" | "confirmed";
-  openAIConfirmModal: (reviewId: number) => void;
-  openManualConfirmModal: (reviewId: number) => void;
+  openConfirmModal: (reviewId: number, modalType: "ai" | "manual") => void;
 }
 
 export default function ReviewItem({
   filteredReview,
   activeTab,
-  openAIConfirmModal,
-  openManualConfirmModal,
+  openConfirmModal,
 }: ReviewItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [chatDialogs, setChatDialogs] = useState<ReviewChatDialog[]>([]);
@@ -126,7 +124,7 @@ export default function ReviewItem({
             <>
               {/* AI 답변 전송 버튼 */}
               <button
-                onClick={() => openAIConfirmModal(filteredReview.id)}
+                onClick={() => openConfirmModal(filteredReview.id, "ai")}
                 className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 flex items-center gap-1"
                 title="AI 답변을 전송하고 검증완료"
               >
@@ -136,7 +134,7 @@ export default function ReviewItem({
 
               {/* 수동 검증완료 버튼 */}
               <button
-                onClick={() => openManualConfirmModal(filteredReview.id)}
+                onClick={() => openConfirmModal(filteredReview.id, "manual")}
                 className="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600"
                 title="AI 답변 없이 검증만 완료 (CX팀 직접 응대)"
               >
