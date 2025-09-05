@@ -28,7 +28,7 @@ jobs:
           RAG_API_URL: ${{ secrets.RAG_API_URL }}
           RAG_MASTER_TOKEN: ${{ secrets.RAG_MASTER_TOKEN }}
         run: |
-          node scripts/processExcel.js
+          node nextjs-chatbot/scripts/processExcel.js
       
       - name: Upload Results
         if: always()
