@@ -1,0 +1,38 @@
+name: Process Excel Upload
+on:
+  repository_dispatch:
+    types: [process-excel]
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          npm install xlsx node-fetch form-data
+      
+      - name: Process Excel File
+        env:
+          FILE_URL: ${{ github.event.client_payload.fileUrl }}
+          FILE_NAME: ${{ github.event.client_payload.fileName }}
+          JOB_ID: ${{ github.event.client_payload.jobId }}
+          RAG_API_URL: ${{ secrets.RAG_API_URL }}
+          RAG_MASTER_TOKEN: ${{ secrets.RAG_MASTER_TOKEN }}
+        run: |
+          node nextjs-chatbot/scripts/processExcel.js
+      
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: process-results
+          path: process-results.json
