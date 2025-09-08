@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trash2, FileSpreadsheet, Check, X, Download } from "lucide-react";
+import { Trash2, Download, RefreshCw } from "lucide-react";
 import { fetchInstance } from "@/lib/fetchInstance";
 import { QAItem, QAListProps } from "@/types/qa";
 import { Pagination } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
+import toast from "react-hot-toast";
 
 export default function QAList({ refreshTrigger }: QAListProps) {
   const [qaList, setQaList] = useState<QAItem[]>([]);
@@ -13,12 +14,13 @@ export default function QAList({ refreshTrigger }: QAListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [serverBusy, setServerBusy] = useState(false);
 
   const fetchQAList = async (page: number = 1, size: number = 20) => {
     setLoading(true);
+    setServerBusy(false); // 재시도 시 초기화
     try {
       const result = await fetchInstance(`/qa/?page=${page}&size=${size}`);
-
       if (result && result.data) {
         setQaList(result.data);
         setPagination(result.pagination);
@@ -26,8 +28,17 @@ export default function QAList({ refreshTrigger }: QAListProps) {
       } else {
         console.error("예상하지 못한 응답 형식:", result);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch QA list:", error);
+
+      // 502 에러는 서버가 바쁜 상태
+      if (error.message?.includes("502")) {
+        setServerBusy(true);
+        // 기존 데이터는 유지
+      } else {
+        // 다른 에러는 toast로 알림
+        toast.error("목록을 불러오는데 실패했습니다.");
+      }
     } finally {
       setLoading(false);
     }
@@ -43,12 +54,12 @@ export default function QAList({ refreshTrigger }: QAListProps) {
       });
 
       // 성공 시
-      alert("✅ QA가 성공적으로 삭제되었습니다.");
+      toast.success("QA가 성공적으로 삭제되었습니다.");
       // 목록 새로고침
       fetchQAList(currentPage);
     } catch (error) {
       console.error("Delete error:", error);
-      alert("❌ QA 삭제 중 오류가 발생했습니다.");
+      toast.error("QA 삭제 중 오류가 발생했습니다.");
     } finally {
       setDeletingId(null);
     }
@@ -85,12 +96,58 @@ export default function QAList({ refreshTrigger }: QAListProps) {
       );
     } catch (error) {
       console.error("Failed to download Excel:", error);
-      alert("Excel 다운로드 중 오류가 발생했습니다.");
+      toast.error("Excel 다운로드 중 오류가 발생했습니다.");
     }
+  };
+  const fetchVectorStatus = async () => {
+    const result = await fetchInstance(`/qa/vector-status`);
+    console.log("result", result);
+  };
+
+  const handleSync = () => {
+    // 백터 DB와 Q-A DB 행 동기화 시키기 위해 필요
+
+    // 즉시 toast 메시지 표시
+    toast("동기화를 시작합니다...", {
+      icon: "🔄",
+      duration: 2000,
+    });
+
+    // API 호출은 백그라운드로 (로딩 상태 관리 안 함)
+    fetchInstance(`/qa/reset-and-sync`, {
+      method: "POST",
+    })
+      .then(() => {
+        // 성공 (실제로는 거의 도달 안 함)
+        toast.success("동기화 완료!");
+      })
+      .catch((error: any) => {
+        // 502는 예상된 동작
+        if (error.message?.includes("502")) {
+          toast("동기화가 백그라운드에서 계속 진행됩니다.", {
+            icon: "✅",
+            duration: 3000,
+          });
+        } else {
+          toast.error("동기화 실패");
+        }
+      });
+
+    // 함수는 즉시 종료 (API 응답을 기다리지 않음)
+  };
+
+  const refreshQAList = async () => {
+    await fetchQAList(1);
+
+    // 2. 백그라운드에서 동기화 실행 (Fire and Forget)
+    handleSync();
   };
 
   useEffect(() => {
-    console.log("refreshTrigger 변경됨:", refreshTrigger);
+    fetchVectorStatus();
+  }, []);
+
+  useEffect(() => {
     fetchQAList(1);
   }, [refreshTrigger]);
 
@@ -112,12 +169,13 @@ export default function QAList({ refreshTrigger }: QAListProps) {
             Excel 다운로드
           </button>
           <button
-            onClick={() => fetchQAList(currentPage)}
+            onClick={() => refreshQAList()}
             className="px-4 py-2 bg-gray-100 text-gray-700
   rounded-lg hover:bg-gray-200 flex items-center gap-2
   transition-colors"
           >
-            새로고침
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            DB 동기화
           </button>
         </div>
       </div>
@@ -125,6 +183,34 @@ export default function QAList({ refreshTrigger }: QAListProps) {
       {loading ? (
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        </div>
+      ) : serverBusy ? (
+        // 서버가 바쁠 때 보여줄 UI
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <div className="text-6xl">⏳</div>
+          <h3 className="text-lg font-semibold text-gray-700">
+            서버가 처리 중입니다
+          </h3>
+          <p className="text-sm text-gray-500 text-center max-w-md">
+            현재 서버가 다른 작업을 처리 중입니다.
+            <br />
+            잠시 후 다시 시도해주세요.
+          </p>
+
+          {qaList.length > 0 && (
+            <div className="w-full mt-4 pt-4 border-t">
+              <p className="text-xs text-gray-400 text-center mb-2">
+                이전 데이터 (최신 정보가 아닐 수 있음)
+              </p>
+              <div className="max-h-60 overflow-y-auto space-y-2 opacity-50">
+                {qaList.map((item) => (
+                  <div key={item.id} className="p-2 border rounded text-sm">
+                    <p className="text-gray-600">Q: {item.question}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="max-h-96 overflow-y-auto space-y-2">
