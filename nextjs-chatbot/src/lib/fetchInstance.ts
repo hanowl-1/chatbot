@@ -38,5 +38,6 @@ export async function fetchInstance(endpoint: string, options?: RequestInit) {
     throw new Error(`RAG API error: ${response.status} - ${errorText}`);
   }
 
-  return response.json();
+  const result = await response.json();
+  return result;
 }

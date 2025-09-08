@@ -43,6 +43,10 @@ export default function QAList({ refreshTrigger }: QAListProps) {
       setLoading(false);
     }
   };
+  const fetchVectorStatus = async () => {
+    const result = await fetchInstance(`/qa/vector-status`);
+    console.log("result", result);
+  };
 
   const handleDelete = async (id: number) => {
     if (!confirm("정말로 이 QA를 삭제하시겠습니까?")) return;
@@ -99,49 +103,45 @@ export default function QAList({ refreshTrigger }: QAListProps) {
       toast.error("Excel 다운로드 중 오류가 발생했습니다.");
     }
   };
-  const fetchVectorStatus = async () => {
-    const result = await fetchInstance(`/qa/vector-status`);
-    console.log("result", result);
-  };
 
-  const handleSync = () => {
-    // 백터 DB와 Q-A DB 행 동기화 시키기 위해 필요
-
-    // 즉시 toast 메시지 표시
-    toast("동기화를 시작합니다...", {
+  // 백터 DB와 Q-A DB 행 동기화
+  const handleSync = async () => {
+    toast("동기화중... 완료시 알려드립니다.", {
       icon: "🔄",
-      duration: 2000,
+      duration: 3000,
     });
-
-    // API 호출은 백그라운드로 (로딩 상태 관리 안 함)
-    fetchInstance(`/qa/reset-and-sync`, {
+    // 동기화 작업은 백그라운드에서 처리
+    await fetchInstance(`/qa/reset-and-sync`, {
       method: "POST",
-    })
-      .then(() => {
-        // 성공 (실제로는 거의 도달 안 함)
-        toast.success("동기화 완료!");
-      })
-      .catch((error: any) => {
-        // 502는 예상된 동작
-        if (error.message?.includes("502")) {
-          toast("동기화가 백그라운드에서 계속 진행됩니다.", {
-            icon: "✅",
-            duration: 3000,
-          });
-        } else {
-          toast.error("동기화 실패");
+    });
+    // 동기화 시작했으니 상태 체크 시작
+    checkSyncStatus();
+  };
+
+  // 동기화 상태 확인
+  const checkSyncStatus = async () => {
+    const interval = setInterval(async () => {
+      try {
+        const result = await fetchInstance(`/qa/vector-status`);
+        console.log("result", result);
+        if (result.synchronization.status === "synced") {
+          clearInterval(interval);
+          toast.success("동기화 완료!");
         }
-      });
+      } catch (error) {
+        clearInterval(interval);
+      }
+    }, 10000); // 10초마다 상태 확인
 
-    // 함수는 즉시 종료 (API 응답을 기다리지 않음)
+    setTimeout(() => {
+      clearInterval(interval);
+    }, 300000); // 5분 후 종료
   };
 
-  const refreshQAList = async () => {
-    await fetchQAList(1);
-
-    // 2. 백그라운드에서 동기화 실행 (Fire and Forget)
-    handleSync();
-  };
+  // const refreshQAList = async () => {
+  //   await fetchQAList(1);
+  //   await handleSync();
+  // };
 
   useEffect(() => {
     fetchVectorStatus();
@@ -169,7 +169,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
             Excel 다운로드
           </button>
           <button
-            onClick={() => refreshQAList()}
+            onClick={() => handleSync()}
             className="px-4 py-2 bg-gray-100 text-gray-700
   rounded-lg hover:bg-gray-200 flex items-center gap-2
   transition-colors"
