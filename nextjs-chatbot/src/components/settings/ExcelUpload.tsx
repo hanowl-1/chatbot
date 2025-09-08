@@ -43,12 +43,12 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
         method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || "Upload failed");
       }
-      
+
       const data = await response.json();
       console.log("Upload response:", data);
 
@@ -61,9 +61,9 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
             <>
               {data.message}
               <br />
-              <a 
-                href={data.workflowUrl} 
-                target="_blank" 
+              <a
+                href={data.workflowUrl}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 underline hover:text-blue-800"
               >
@@ -83,7 +83,7 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
           count: data.successCount || data.totalRows,
         });
       }
-      
+
       if (data.success) {
         onUploadSuccess?.();
       }
@@ -110,7 +110,8 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
           <span className="text-blue-700">
-            Excel 파일 업로드 중... (서버에서 처리 중입니다. 페이지를 이동하셔도 됩니다.)
+            Excel 파일 업로드 중... (서버에서 처리 중입니다. 페이지를 이동하셔도
+            됩니다.)
           </span>
         </div>
       )}
@@ -148,11 +149,13 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
 
       {/* Excel 업로드 버튼 */}
       <button
+        disabled // 임시처리
         onClick={() => setShowUploadModal(true)}
-        className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center gap-2"
+        className="disabled:opacity-50 disabled:cursor-not-allowed 
+        px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center gap-2"
       >
         <FileSpreadsheet className="w-4 h-4" />
-        Excel 업로드
+        Excel 업로드(임시 비활성화)
       </button>
 
       {/* Excel 업로드 모달 */}

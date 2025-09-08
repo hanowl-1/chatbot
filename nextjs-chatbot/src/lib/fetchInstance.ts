@@ -11,13 +11,16 @@ const getHeaders = (isFormData: boolean = false) => {
 
 export async function fetchInstance(endpoint: string, options?: RequestInit) {
   const isFormData = options?.body instanceof FormData;
-  const method = options?.method || 'GET';
-  
+  const method = options?.method || "GET";
+
   const proxyUrl = `/api/proxy${endpoint}`;
 
   // POST/PUT 요청이지만 body가 없는 경우 빈 객체 전달
   let requestBody = options?.body;
-  if ((method === 'POST' || method === 'PUT' || method === 'PATCH') && !requestBody) {
+  if (
+    (method === "POST" || method === "PUT" || method === "PATCH") &&
+    !requestBody
+  ) {
     requestBody = JSON.stringify({});
   }
 
