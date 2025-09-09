@@ -1,10 +1,9 @@
 export interface QAItem {
-  id: number;
-  qa_id: string;
+  qa_id: number;
   question: string;
   answer: string;
-  updated_at?: string;
-  similarity_score?: number;
+  similarity_score: number;
+  updated_at: string;
   requires_confirmation?: boolean;
 }
 

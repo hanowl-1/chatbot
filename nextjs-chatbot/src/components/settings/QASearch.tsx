@@ -248,9 +248,9 @@ export default function QASearch({
                       Q: {item.question}
                     </p>
                     <div className="flex gap-3 text-xs">
-                      {(item.qa_id || item.id) && (
+                      {item.qa_id && (
                         <span className="text-blue-600 font-semibold">
-                          qa_id: {item.qa_id || item.id}
+                          qa_id: {item.qa_id}
                         </span>
                       )}
                       {item.similarity_score !== undefined && (
