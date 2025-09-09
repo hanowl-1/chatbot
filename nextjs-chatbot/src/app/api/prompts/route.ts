@@ -15,6 +15,7 @@ const PROMPT_TYPES = {
   ANSWER_GENERATION: "answer_generation",
   CONFIDENCE_CHECK: "confidence_check",
   FINAL_ANSWER: "final_answer",
+  SYSTEM: "system",
 } as const;
 
 export async function GET() {
@@ -37,6 +38,7 @@ export async function GET() {
         assess_confidence:
           "당신은 AI 답변의 품질을 평가하는 검증 시스템입니다.",
         generate_final_answer: "당신은 최종 답변을 생성하는 AI입니다.",
+        system: "당신은 도움이 되고 정확한 정보를 제공하는 AI 어시스턴트입니다.",
         lastModified: new Date().toISOString(),
         version: 1,
       });
@@ -60,6 +62,8 @@ export async function GET() {
         promptsMap[PROMPT_TYPES.CONFIDENCE_CHECK]?.prompt_text || "",
       generate_final_answer:
         promptsMap[PROMPT_TYPES.FINAL_ANSWER]?.prompt_text || "",
+      system:
+        promptsMap[PROMPT_TYPES.SYSTEM]?.prompt_text || "",
       lastModified:
         promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.last_modified ||
         new Date().toISOString(),
@@ -68,7 +72,8 @@ export async function GET() {
         promptsMap[PROMPT_TYPES.REFINE_QUESTION]?.version || 1,
         promptsMap[PROMPT_TYPES.ANSWER_GENERATION]?.version || 1,
         promptsMap[PROMPT_TYPES.CONFIDENCE_CHECK]?.version || 1,
-        promptsMap[PROMPT_TYPES.FINAL_ANSWER]?.version || 1
+        promptsMap[PROMPT_TYPES.FINAL_ANSWER]?.version || 1,
+        promptsMap[PROMPT_TYPES.SYSTEM]?.version || 1
       ),
     });
   } catch (error) {
@@ -80,6 +85,7 @@ export async function GET() {
       generate_answer: "당신은 슈퍼멤버스 플랫폼 전용 고객지원 AI 챗봇입니다.",
       assess_confidence: "당신은 AI 답변의 품질을 평가하는 검증 시스템입니다.",
       generate_final_answer: "당신은 최종 답변을 생성하는 AI입니다.",
+      system: "당신은 도움이 되고 정확한 정보를 제공하는 AI 어시스턴트입니다.",
       lastModified: new Date().toISOString(),
       version: 1,
     });
@@ -96,6 +102,7 @@ export async function PUT(request: NextRequest) {
       generate_answer,
       assess_confidence,
       generate_final_answer,
+      system,
     } = body;
 
     // 업데이트할 프롬프트들 준비
@@ -120,6 +127,10 @@ export async function PUT(request: NextRequest) {
       {
         type: PROMPT_TYPES.FINAL_ANSWER,
         text: generate_final_answer,
+      },
+      {
+        type: PROMPT_TYPES.SYSTEM,
+        text: system,
       },
     ].filter((item) => item.text !== undefined);
 

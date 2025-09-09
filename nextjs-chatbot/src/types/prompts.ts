@@ -4,6 +4,7 @@ export interface Prompts {
   generate_answer: string;
   assess_confidence: string;
   generate_final_answer: string;
+  system: string;
   lastModified?: string;
   version?: number;
 }

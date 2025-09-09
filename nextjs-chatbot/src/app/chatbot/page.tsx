@@ -52,6 +52,7 @@ export default function ChatbotPage() {
           assess_confidence: data.assess_confidence || "",
           // generate_final_answer: data.generate_final_answer || "",
           generate_final_answer: "",
+          system: data.system || "",
         });
       }
     } catch (error) {
@@ -109,10 +110,7 @@ export default function ChatbotPage() {
       //       ? JSON.stringify(data.query_analysis, null, 2)
       //       : data.query_analysis;
       // } else if (
-      if (
-        selectedPipeline === "refine_question" &&
-        data.refined_question
-      ) {
+      if (selectedPipeline === "refine_question" && data.refined_question) {
         content = data.refined_question;
       } else if (
         selectedPipeline === "generate_answer" &&
@@ -127,7 +125,7 @@ export default function ChatbotPage() {
           typeof data.confidence_assessment === "object"
             ? JSON.stringify(data.confidence_assessment, null, 2)
             : data.confidence_assessment;
-      } 
+      }
       // 최종답변 주석처리
       // else if (selectedPipeline === "all" && data.final_answer) {
       //   content = data.final_answer;

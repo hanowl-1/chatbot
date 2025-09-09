@@ -19,7 +19,7 @@ export default function PromptsPage() {
     useState<Prompts>(DEFAULT_PROMPTS);
 
   // const [activeTab, setActiveTab] = useState<keyof Prompts>("analyze_query");
-  const [activeTab, setActiveTab] = useState<keyof Prompts>("refine_question");
+  const [activeTab, setActiveTab] = useState<keyof Prompts>("system");
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
@@ -44,6 +44,7 @@ export default function PromptsPage() {
           refine_question: data.refine_question || "",
           assess_confidence: data.assess_confidence || "",
           generate_final_answer: data.generate_final_answer || "",
+          system: data.system || "",
           lastModified: data.lastModified,
           version: data.version,
         };
@@ -72,6 +73,7 @@ export default function PromptsPage() {
           generate_answer: prompts.generate_answer,
           assess_confidence: prompts.assess_confidence,
           generate_final_answer: prompts.generate_final_answer,
+          system: prompts.system,
         }),
       });
 

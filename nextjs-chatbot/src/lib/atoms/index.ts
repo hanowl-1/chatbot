@@ -12,4 +12,5 @@ export const promptsAtom = atom<Prompts>({
   generate_answer: "",
   assess_confidence: "",
   generate_final_answer: "",
+  system: "",
 });

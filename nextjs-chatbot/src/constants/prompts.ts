@@ -1,4 +1,4 @@
-import { RotateCcw, Sparkles, Shield } from "lucide-react";
+import { RotateCcw, Sparkles, Shield, Brain } from "lucide-react";
 
 export const DEFAULT_PROMPTS = {
   analyze_query: "",
@@ -6,9 +6,16 @@ export const DEFAULT_PROMPTS = {
   generate_answer: "",
   assess_confidence: "",
   generate_final_answer: "",
+  system: "",
 };
 
 export const PROMPTS_TABS = [
+  {
+    id: "system" as const,
+    label: "시스템 프롬프트",
+    icon: Brain,
+    description: "AI의 전반적인 동작 제어",
+  },
   // {
   //   id: "analyze_query" as const,
   //   label: "질의분석 프롬프트",
