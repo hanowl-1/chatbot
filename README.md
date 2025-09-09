@@ -1,6 +1,6 @@
-# 슈퍼멤버스 FAQ 챗봇 테스터
+# 슈퍼멤버스 FAQ 챗봇 & 리뷰 관리 시스템
 
-슈퍼멤버스 플랫폼 전용 FAQ 기반 AI 챗봇의 성능을 테스트하고 비교하는 웹 애플리케이션입니다.
+슈퍼멤버스 플랫폼 전용 FAQ 기반 AI 챗봇과 리뷰 답변 관리 시스템을 통합한 웹 애플리케이션입니다.
 
 ## 🚀 주요 기능
 
@@ -28,6 +28,20 @@
 - 여러 질문을 한 번에 테스트
 - 모델별 성능 비교
 - 결과 리포트 생성
+
+### 6. 리뷰 답변 관리 시스템
+- **자동 리뷰 동기화**: Supabase와 연동된 실시간 리뷰 데이터 관리
+- **리뷰 상태 관리**: 대기중/완료/임시저장 상태 분류
+- **AI 답변 생성**: GPT-4를 활용한 자동 답변 생성
+- **수동 답변 작성**: 직접 리뷰 답변 작성 및 편집
+- **실시간 업데이트 알림**: 새로운 리뷰 자동 감지 및 알림
+- **페이지네이션**: 대량 리뷰 효율적 관리
+
+### 7. 백터 데이터베이스 관리
+- **엑셀 파일 업로드**: FAQ 데이터 일괄 업로드 지원
+- **GitHub Actions 연동**: 백그라운드 처리를 통한 대용량 파일 처리
+- **동기화 상태 확인**: 주기적인 동기화 상태 모니터링
+- **Toast 알림**: 동기화 완료 및 오류 상태 실시간 알림
 
 ## 📋 시작하기
 
@@ -64,10 +78,23 @@ GOOGLE_API_KEY=your_google_gemini_api_key_here
 GROQ_API_KEY=your_groq_api_key_here
 TOGETHER_API_KEY=your_together_api_key_here
 
+# Supabase (리뷰 관리 시스템)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
 # Google Sheets (선택사항 - FAQ 동기화용)
 GOOGLE_SHEETS_CLIENT_EMAIL=your_service_account_email
 GOOGLE_SHEETS_PRIVATE_KEY=your_private_key_here
 GOOGLE_SHEETS_SPREADSHEET_ID=your_spreadsheet_id_here
+
+# RAG API (백터 데이터베이스 연동)
+RAG_API_URL=your_rag_api_url
+RAG_MASTER_TOKEN=your_rag_master_token
+
+# GitHub Actions (엑셀 처리용)
+GITHUB_TOKEN=your_github_token
+GITHUB_OWNER=your_github_username
+GITHUB_REPO=your_repo_name
 ```
 
 4. 개발 서버 실행
@@ -96,6 +123,16 @@ npm run dev
    - https://console.cloud.google.com
    - Sheets API 활성화 후 API 키 생성
 
+5. **Supabase 설정**
+   - https://supabase.com 에서 프로젝트 생성
+   - Settings → API 에서 URL과 anon key 복사
+   - 리뷰 테이블 스키마 설정 필요
+
+6. **GitHub Token**
+   - https://github.com/settings/tokens
+   - Generate new token (classic)
+   - repo 권한 체크
+
 ### Google Sheets FAQ 연동
 
 1. 공식 FAQ Google Sheets:
@@ -118,14 +155,31 @@ chatbot/
 │   ├── src/
 │   │   ├── app/             # App Router 페이지
 │   │   │   ├── api/         # API 라우트
-│   │   │   └── prompts/     # 프롬프트 관리 페이지
-│   │   └── components/      # React 컴포넌트
+│   │   │   ├── chatbot/    # 챗봇 테스트 페이지
+│   │   │   ├── prompts/    # 프롬프트 관리 페이지
+│   │   │   ├── reviews/    # 리뷰 관리 페이지
+│   │   │   └── settings/   # 설정 페이지
+│   │   ├── components/      # React 컴포넌트
+│   │   │   ├── common/      # 공통 컴포넌트
+│   │   │   └── reviews/     # 리뷰 관련 컴포넌트
+│   │   ├── lib/             # 유틸리티 및 설정
+│   │   │   ├── atoms/       # Jotai 상태 관리
+│   │   │   └── supabase.ts  # Supabase 클라이언트
+│   │   ├── hooks/           # 커스텀 React 훅
+│   │   ├── types/           # TypeScript 타입 정의
+│   │   └── constants/       # 상수 정의
 │   ├── data/                # 로컬 데이터 저장
 │   │   ├── processed_qna.json
 │   │   └── prompts.json
+│   ├── scripts/             # 유틸리티 스크립트
+│   │   └── processExcel.js  # 엑셀 처리 스크립트
 │   └── package.json
+├── .github/                 # GitHub Actions
+│   └── workflows/
+│       └── process-excel.yml # 엑셀 처리 워크플로우
 ├── documents/               # 프로젝트 문서
 │   └── PRD.md              # 제품 요구사항 문서
+├── DEPLOYMENT_GUIDE.md      # 배포 가이드
 └── README.md
 ```
 
@@ -156,6 +210,19 @@ chatbot/
 - 버전 정보 표시
 - 실시간 저장
 
+### 6. 리뷰 관리
+- 대기중/완료/임시저장 탭 분류
+- AI 답변 자동 생성 (GPT-4)
+- 수동 답변 작성 및 편집
+- 실시간 업데이트 알림
+- 페이지네이션 지원
+
+### 7. 설정 페이지
+- 벡터 데이터베이스 동기화
+- 엑셀 파일 업로드 및 처리
+- 동기화 상태 모니터링
+- GitHub Actions 연동 상태
+
 ## 🚀 배포
 
 ### Netlify 배포
@@ -166,10 +233,43 @@ chatbot/
    - `OPENAI_API_KEY`
    - `ANTHROPIC_API_KEY`
    - `GOOGLE_API_KEY`
-   - 기타 필요한 API 키들
+   - `GROQ_API_KEY`
+   - `TOGETHER_API_KEY`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `GOOGLE_SHEETS_CLIENT_EMAIL`
+   - `GOOGLE_SHEETS_PRIVATE_KEY`
+   - `GOOGLE_SHEETS_SPREADSHEET_ID`
+   - `RAG_API_URL`
+   - `RAG_MASTER_TOKEN`
+   - `GITHUB_TOKEN`
+   - `GITHUB_OWNER`
+   - `GITHUB_REPO`
 
 ### 기타 플랫폼
 배포 시 환경 변수를 설정해야 합니다. 각 플랫폼의 환경 변수 설정 방법을 참고하세요.
+
+## 🛠️ 기술 스택
+
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS, Material-UI
+- **State Management**: Jotai
+- **HTTP Client**: Axios
+
+### Backend & Database
+- **Database**: Supabase (PostgreSQL)
+- **Vector DB**: RAG API
+- **Background Processing**: GitHub Actions
+- **File Processing**: XLSX, Node.js scripts
+
+### AI/ML
+- **OpenAI**: GPT-4, GPT-4 Turbo, GPT-3.5 Turbo
+- **Anthropic**: Claude 3 (Opus, Sonnet, Haiku)
+- **Google**: Gemini Pro, Gemini 2.0 Flash
+- **Groq**: LLaMA 모델들
+- **Together AI**: 오픈소스 모델들
 
 ## 🤝 기여하기
 
