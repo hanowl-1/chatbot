@@ -21,7 +21,6 @@ import {
 export default function ReviewsPage() {
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState<ReviewTabType>("waiting");
-
   const [pollingEnabled, setPollingEnabled] = useState(true);
 
   const { reviews, loading, totalPages, totalItems, refreshData } =

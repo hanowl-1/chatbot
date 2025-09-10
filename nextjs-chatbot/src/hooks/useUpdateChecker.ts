@@ -23,6 +23,21 @@ export function useUpdateChecker({
       const result = await fetchInstance(
         "/chatrooms/answers?has_assignee=false&requires_confirmation=true&has_slash_in_name=true&is_confirmed=false&page=1&size=5"
       );
+      // const response = await fetch(
+      //   `${process.env.NEXT_PUBLIC_RAG_API_URL}/chatrooms/answers?has_assignee=false&requires_confirmation=true&has_slash_in_name=true&is_confirmed=false&page=1&size=5`,
+      //   {
+      //     method: "GET",
+      //     headers: {
+      //       Authorization: `Bearer ${process.env.NEXT_PUBLIC_RAG_MASTER_TOKEN}`,
+      //       "Content-Type": "application/json",
+      //     },
+      //     cache: "no-store",
+      //     next: { revalidate: 0 },
+      //   }
+      // );
+      // const result = await response.json();
+
+      console.log("result", result);
       return result.pagination?.total_items || 0;
     } catch (error) {
       console.error("Failed to get pending count:", error);

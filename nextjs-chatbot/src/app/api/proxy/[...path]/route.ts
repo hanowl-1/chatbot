@@ -79,20 +79,11 @@ async function handleRequest(
         body = await request.text();
       }
     }
-
     console.log("body", body);
-    // RAG API로 요청 전달
     const response = await fetch(fullUrl, {
       method,
       headers,
       body: body || undefined,
-    });
-
-    // 디버깅: 응답 상태 로그
-    console.log("Proxy Response:", {
-      status: response.status,
-      statusText: response.statusText,
-      url: fullUrl,
     });
 
     // 응답 처리
@@ -100,15 +91,18 @@ async function handleRequest(
 
     // JSON 파싱 시도
     try {
-      const responseData = JSON.parse(responseText);
-      return NextResponse.json(responseData, { status: response.status });
+      const safeParsedText = responseText.replace(
+        /"chat_dialog_id"\s*:\s*(\d{16,})/g, // 16자리 이상의 숫자 탐지
+        '"chat_dialog_id":"$1"' // 숫자를 문자열로 감싸기
+      );
+      const responseData = JSON.parse(safeParsedText);
+      return NextResponse.json(responseData, {
+        status: response.status,
+      });
     } catch {
       // JSON이 아닌 경우 텍스트로 반환
       return new NextResponse(responseText, {
         status: response.status,
-        headers: {
-          "Content-Type": response.headers.get("content-type") || "text/plain",
-        },
       });
     }
   } catch (error) {
