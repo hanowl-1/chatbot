@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Sparkles, Plus } from "lucide-react";
 import { fetchInstance } from "@/lib/fetchInstance";
 import { QAItem, QASearchProps } from "@/types/qa";
+import { useAtom } from "jotai";
+import { promptsAtom } from "@/lib/atoms";
 
 export default function QASearch({
   onSearchComplete,
@@ -18,6 +20,36 @@ export default function QASearch({
     answer: string;
   } | null>(null);
   const [savingQA, setSavingQA] = useState(false);
+  const [prompts, setPrompts] = useAtom(promptsAtom);
+
+  // 컴포넌트 마운트 시 프롬프트 로드
+  useEffect(() => {
+    // 프롬프트가 비어있으면 로드
+    if (!prompts.generate_answer || !prompts.refine_question || !prompts.assess_confidence) {
+      fetchPrompts();
+    }
+  }, []);
+
+  const fetchPrompts = async () => {
+    try {
+      const response = await fetch("/api/prompts");
+      const data = await response.json();
+
+      if (data) {
+        setPrompts({
+          analyze_query: data.analyze_query || "",
+          refine_question: data.refine_question || "",
+          generate_answer: data.generate_answer || "",
+          assess_confidence: data.assess_confidence || "",
+          generate_final_answer: data.generate_final_answer || "",
+          system: data.system || "",
+        });
+        console.log("✅ QASearch: 프롬프트 로드 완료");
+      }
+    } catch (error) {
+      console.error("Failed to fetch prompts:", error);
+    }
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -29,7 +61,7 @@ export default function QASearch({
         method: "POST",
         body: JSON.stringify({
           question: searchQuery,
-          limit: 10,
+          limit: 5,
         }),
       });
       if (data.results) {
@@ -43,22 +75,21 @@ export default function QASearch({
     }
   };
 
-  // AI로 답변 생성
+  // AI로 답변 추천
   const generateAIAnswer = async () => {
     setGeneratingAI(true);
     try {
-      // 먼저 프롬프트 가져오기
-      const promptResponse = await fetch("/api/prompts");
-      const promptData = await promptResponse.json();
-      const promptText = promptData?.systemPrompt || "";
-
-      const data = await fetchInstance("/qa/rag-generate", {
+      const data = await fetchInstance("/qa/rag-test/v2", {
         method: "POST",
         body: JSON.stringify({
           question: searchQuery,
-          prompt_text: promptText, // 가져온 프롬프트 사용
-          model: "gpt-5",
+          refine_question_prompt: prompts.refine_question,
+          generate_answer_prompt: prompts.generate_answer,
+          assess_confidence_prompt: prompts.assess_confidence,
+          system_prompt: prompts.system,
+          model: "gemini-2.0-flash",
           embedding_count: 1,
+          scope: "generate_answer",
         }),
       });
       console.log("data", data);

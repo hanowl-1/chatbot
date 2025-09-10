@@ -85,6 +85,7 @@ export default function ChatbotPage() {
         generate_answer_prompt: prompts.generate_answer,
         assess_confidence_prompt: prompts.assess_confidence,
         // generate_final_answer_prompt: prompts.generate_final_answer,
+        system_prompt: prompts.system,
         model: selectedModel,
       };
 
