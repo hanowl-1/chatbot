@@ -34,24 +34,36 @@ export default function ReviewsPage() {
   const [dateFilter, setDateFilter] = useState<DateTimeFilterValue>({
     startDate: null,
     endDate: null,
-    mode: "range",
+    mode: "single",
   });
 
-  // Date 객체를 Unix timestamp로 변환
+  // Date 객체를 Unix timestamp로 변환 (시작시간: 00:00:00, 종료시간: 23:59:59)
   const dateToUnixTimestamp = useCallback(
-    (date: Date | null): number | undefined => {
-      return date ? Math.floor(date.getTime() / 1000) : undefined;
+    (date: Date | null, isEndDate: boolean = false): number | undefined => {
+      if (!date) return undefined;
+      
+      const newDate = new Date(date);
+      if (isEndDate) {
+        // 종료일인 경우 23:59:59로 설정
+        newDate.setHours(23, 59, 59, 999);
+      } else {
+        // 시작일인 경우 00:00:00으로 설정
+        newDate.setHours(0, 0, 0, 0);
+      }
+      
+      return Math.floor(newDate.getTime() / 1000);
     },
     []
   );
 
   // 현재 날짜 필터에서 timestamp 추출
-  const startTs = dateToUnixTimestamp(
-    dateFilter.mode === "before" ? null : dateFilter.startDate
-  );
-  const endTs = dateToUnixTimestamp(
-    dateFilter.mode === "after" ? null : dateFilter.endDate
-  );
+  const startTs = dateFilter.mode === "single" 
+    ? dateToUnixTimestamp(dateFilter.startDate, false)
+    : dateToUnixTimestamp(dateFilter.startDate, false);
+    
+  const endTs = dateFilter.mode === "single"
+    ? dateToUnixTimestamp(dateFilter.startDate, true) // 단일 선택시 같은 날짜의 23:59:59
+    : dateToUnixTimestamp(dateFilter.endDate, true);
 
   const { reviews, loading, totalPages, totalItems, refreshData } =
     useReviewData({
@@ -163,7 +175,7 @@ export default function ReviewsPage() {
     setDateFilter({
       startDate: null,
       endDate: null,
-      mode: "range",
+      mode: "single",
     });
     setPage(1); // 페이지도 1로 초기화
   }, []);
