@@ -145,6 +145,11 @@ export default function ReviewsPage() {
             is_hidden: isHidden,
           }),
         });
+        setSelectedAnswerIds([]);
+        refreshData();
+        alert(
+          `${selectedAnswerIds.length}개 항목의 노출여부가 변경되었습니다.`
+        );
       } catch (error) {
         console.error("노출여부 변경 오류:", error);
         alert("노출여부 변경에 실패했습니다. 다시 시도해주세요.");
