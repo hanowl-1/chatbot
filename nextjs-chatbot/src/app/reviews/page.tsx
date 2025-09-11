@@ -66,11 +66,13 @@ export default function ReviewsPage() {
   const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null);
   const [modalType, setModalType] = useState<"ai" | "manual">("manual");
 
+  const hasDateFilter = dateFilter.startDate || dateFilter.endDate;
+
   // 업데이트 체크 훅
   const { updateCount, isChecking, resetUpdates } = useUpdateChecker({
     currentReviewCount: totalItems,
     interval: POLLING_INTERVAL,
-    enabled: activeTab === "waiting" && pollingEnabled,
+    enabled: activeTab === "waiting" && pollingEnabled && !hasDateFilter,
   });
 
   // 탭 변경 시 페이지 리셋 및 선택 항목 초기화
