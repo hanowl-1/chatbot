@@ -5,9 +5,18 @@ import { PendingReview, ReviewTabType } from "@/types/review";
 interface UseReviewDataProps {
   activeTab: ReviewTabType;
   page: number;
+  isHidden: boolean;
+  startTs?: number;
+  endTs?: number;
 }
 
-export function useReviewData({ activeTab, page }: UseReviewDataProps) {
+export function useReviewData({
+  activeTab,
+  page,
+  isHidden,
+  startTs,
+  endTs,
+}: UseReviewDataProps) {
   const [reviews, setReviews] = useState<PendingReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
@@ -22,35 +31,25 @@ export function useReviewData({ activeTab, page }: UseReviewDataProps) {
     setLoading(true);
     try {
       const isConfirmed = currentTab === "confirmed";
+
+      // 쿼리 파라미터 구성
+      const queryParams = new URLSearchParams({
+        has_assignee: "false",
+        requires_confirmation: "true",
+        has_slash_in_name: "true",
+        is_confirmed: isConfirmed.toString(),
+        page: currentPage.toString(),
+        size: size.toString(),
+        is_hidden: (isHidden && isConfirmed).toString(),
+      });
+
+      // timestamp 파라미터 추가 (값이 있을 때만)
+      if (startTs) queryParams.append("start_ts", startTs.toString());
+      if (endTs) queryParams.append("end_ts", endTs.toString());
+
       const data = await fetchInstance(
-        `/chatrooms/answers?has_assignee=false&requires_confirmation=true&has_slash_in_name=true&is_confirmed=${isConfirmed}&page=${currentPage}&size=${size}`
+        `/chatrooms/answers?${queryParams.toString()}`
       );
-
-      // const repsonse = await fetch(
-      //   `${process.env.NEXT_PUBLIC_RAG_API_URL}/chatrooms/answers?has_assignee=false&requires_confirmation=true&has_slash_in_name=true&is_confirmed=${isConfirmed}&page=${currentPage}&size=${size}`,
-      //   {
-      //     method: "GET",
-      //     headers: {
-      //       Authorization: `Bearer ${process.env.NEXT_PUBLIC_RAG_MASTER_TOKEN}`,
-      //       "Content-Type": "application/json",
-      //     },
-      //     cache: "no-store", // 캐싱 비활성화
-      //     next: { revalidate: 0 }, // Next.js 캐싱 비활성화
-      //   }
-      // );
-
-      // // Response를 텍스트로 받기
-      // const responseText = await repsonse.text();
-      // // console.log("responseText", responseText);
-
-      // // JSON 파싱 전에 큰 chat_dialog_id를 문자열로 변환
-      // const safeParsedText = responseText.replace(
-      //   /"chat_dialog_id"\s*:\s*(\d{16,})/g, // 16자리 이상의 숫자 탐지
-      //   '"chat_dialog_id":"$1"' // 숫자를 문자열로 감싸기
-      // );
-      // console.log("safeParsedText", safeParsedText);
-      // const data = JSON.parse(safeParsedText);
-      console.log("data", data.data);
 
       setReviews(data.data || []);
       setTotalItems(data.pagination?.total_items || 0);
@@ -65,21 +64,20 @@ export function useReviewData({ activeTab, page }: UseReviewDataProps) {
     }
   };
 
-  // 탭 변경 시
   useEffect(() => {
     fetchReviewData(activeTab, 1);
-  }, [activeTab]);
+  }, [activeTab, isHidden, startTs, endTs]);
 
   // 페이지 변경 시
   useEffect(() => {
     if (page > 1) {
       fetchReviewData(activeTab, page);
     }
-  }, [page, activeTab]);
+  }, [page, activeTab, isHidden, startTs, endTs]);
 
   const refreshData = useCallback(async () => {
     await fetchReviewData(activeTab, page);
-  }, [activeTab, page]); // fetchReviewData도 의존성에 포함
+  }, [activeTab, page, isHidden, startTs, endTs]); // timestamp도 의존성에 포함
 
   return {
     reviews,

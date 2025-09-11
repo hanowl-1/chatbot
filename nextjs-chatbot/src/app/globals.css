@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* react-datepicker 커스텀 스타일 */
+.react-datepicker__input-container input {
+  @apply w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500;
+}
+
+.react-datepicker {
+  @apply border border-gray-300 rounded-lg shadow-lg;
+}
+
+.react-datepicker__header {
+  @apply bg-blue-50 border-b border-gray-200;
+}
+
+.react-datepicker__current-month {
+  @apply text-lg font-medium text-gray-800;
+}
+
+.react-datepicker__day--selected {
+  @apply bg-blue-500 text-white;
+}
+
+.react-datepicker__day--keyboard-selected {
+  @apply bg-blue-100 text-gray-800;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+  @apply w-full;
+}

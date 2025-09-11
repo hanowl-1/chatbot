@@ -20,12 +20,17 @@ interface ReviewItemProps {
   filteredReview: PendingReview;
   activeTab: "waiting" | "confirmed";
   openConfirmModal: (reviewId: number, modalType: "ai" | "manual") => void;
+  // 선택 기능 (검증완료 탭에서만 사용)
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 export default function ReviewItem({
   filteredReview,
   activeTab,
   openConfirmModal,
+  isSelected = false,
+  onToggleSelect,
 }: ReviewItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [chatDialogs, setChatDialogs] = useState<ReviewChatDialog[]>([]);
@@ -93,6 +98,16 @@ export default function ReviewItem({
       {/* 첫번째 줄 - 헤더 정보 */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
+          {/* 선택 체크박스 (검증완료 탭에서만 표시) */}
+          {onToggleSelect && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelect}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            />
+          )}
+
           {/* 신뢰도 배지 */}
           <span
             className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getConfidenceColor(
@@ -111,9 +126,9 @@ export default function ReviewItem({
           {/* 시간 */}
           <span className="text-xs text-gray-500 flex items-center gap-1">
             <Clock className="w-3 h-3" />
-            {new Date(filteredReview.created_at).toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
+            {new Date(filteredReview.created_at).toLocaleString("ko-KR", {
+              dateStyle: "short",
+              timeStyle: "short",
             })}
           </span>
         </div>
