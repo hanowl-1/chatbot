@@ -25,6 +25,13 @@ export async function PUT(
   return handleRequest(request, "PUT", params.path);
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  return handleRequest(request, "PATCH", params.path);
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { path: string[] } }

@@ -274,18 +274,22 @@ export default function ReviewsPage() {
                   {/* 일괄 처리 버튼들 */}
                   {selectedAnswerIds.length > 0 && (
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleBulkVisibilityChange(true)}
-                        className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-                      >
-                        선택 항목 숨기기
-                      </button>
-                      <button
-                        onClick={() => handleBulkVisibilityChange(false)}
-                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                      >
-                        선택 항목 보이기
-                      </button>
+                      {!isHidden && (
+                        <button
+                          onClick={() => handleBulkVisibilityChange(true)}
+                          className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                        >
+                          선택 항목 숨기기
+                        </button>
+                      )}
+                      {isHidden && (
+                        <button
+                          onClick={() => handleBulkVisibilityChange(false)}
+                          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                        >
+                          선택 항목 보이기
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
