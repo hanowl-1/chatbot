@@ -20,8 +20,18 @@ export function useUpdateChecker({
   // 실제 검증 대기 개수 가져오기
   const getActualReviewCount = useCallback(async () => {
     try {
+      const queryParams = new URLSearchParams({
+        has_assignee: "false",
+        requires_confirmation: "true",
+        has_slash_in_name: "true",
+        is_confirmed: "false",
+        page: "1",
+        size: "5",
+        is_hidden: "false",
+      });
+
       const result = await fetchInstance(
-        "/chatrooms/answers?has_assignee=false&requires_confirmation=true&has_slash_in_name=true&is_confirmed=false&page=1&size=5"
+        `/chatrooms/answers?${queryParams.toString()}`
       );
       // const response = await fetch(
       //   `${process.env.NEXT_PUBLIC_RAG_API_URL}/chatrooms/answers?has_assignee=false&requires_confirmation=true&has_slash_in_name=true&is_confirmed=false&page=1&size=5`,
