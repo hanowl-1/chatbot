@@ -138,23 +138,13 @@ export default function ReviewsPage() {
       }
 
       try {
-        const response = await fetchInstance("/chatrooms/answers/visibility", {
+        await fetchInstance("/chatrooms/answers/visibility", {
           method: "PATCH",
           body: JSON.stringify({
             answer_ids: selectedAnswerIds,
             is_hidden: isHidden,
           }),
         });
-
-        if (response.ok) {
-          setSelectedAnswerIds([]);
-          refreshData();
-          alert(
-            `${selectedAnswerIds.length}개 항목의 노출여부가 변경되었습니다.`
-          );
-        } else {
-          throw new Error("노출여부 변경에 실패했습니다.");
-        }
       } catch (error) {
         console.error("노출여부 변경 오류:", error);
         alert("노출여부 변경에 실패했습니다. 다시 시도해주세요.");
