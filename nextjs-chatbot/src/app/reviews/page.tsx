@@ -279,6 +279,7 @@ export default function ReviewsPage() {
                           onClick={() => handleBulkVisibilityChange(true)}
                           className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
                         >
+                          {/* s */}
                           선택 항목 숨기기
                         </button>
                       )}
