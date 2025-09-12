@@ -55,8 +55,10 @@ export function useLoadPrompts() {
         }
       } catch (error) {
         console.error("❌ 프롬프트 로드 실패:", error);
-        // 에러가 나도 일단 로드됨으로 처리 (무한 재시도 방지)
         setIsLoaded(true);
+
+        // TODO: Toast 메시지 추가 (react-hot-toast 등 설치 후)
+        // toast.error("프롬프트를 불러올 수 없어 기본값을 사용합니다.");
       }
     };
 

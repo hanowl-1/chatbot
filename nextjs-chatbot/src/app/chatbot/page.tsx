@@ -19,7 +19,7 @@ export default function ChatbotPage() {
   const [selectedPipeline, setSelectedPipeline] = useState(
     PIPELINE_OPTIONS[0].value
   );
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useLoadPrompts(); // 초기 로드 처리
   const prompts = useAtomValue(promptsAtom); // 읽기 전용으로 사용
@@ -49,7 +49,7 @@ export default function ChatbotPage() {
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       // API 호출 - 최종 답변일 때는 scope 필드 제외
@@ -129,10 +129,9 @@ export default function ChatbotPage() {
         model: selectedModel,
         timestamp: new Date(),
       };
-
       setMessages((prev) => [...prev, assistantMessage]);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -331,7 +330,7 @@ export default function ChatbotPage() {
               </div>
             ))
           )}
-          {loading && (
+          {submitting && (
             <div className="flex justify-start">
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-full bg-green-500">
@@ -371,11 +370,11 @@ export default function ChatbotPage() {
               placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
               className="flex-1 p-2 border rounded-lg resize-none"
               rows={3}
-              disabled={loading}
+              disabled={submitting}
             />
             <button
               onClick={handleSend}
-              disabled={loading || !input.trim()}
+              disabled={submitting || !input.trim()}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-5 h-5" />
