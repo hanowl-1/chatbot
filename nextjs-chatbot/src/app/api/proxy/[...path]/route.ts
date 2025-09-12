@@ -45,13 +45,18 @@ async function handleRequest(
   pathSegments: string[]
 ) {
   try {
-    // RAG API 엔드포인트 재구성
+    // 엔드포인트 재구성
     let endpoint = "/" + pathSegments.join("/");
-    // /qa 엔드포인트는 항상 끝 슬래시가 필요함
-    // RAG API의 특성상 /qa는 /qa/로 리다이렉트됨
-    if (endpoint === "/qa" || endpoint.startsWith("/qa?")) {
-      endpoint = "/qa/";
-    }
+
+    // 일부 엔드포인트는 항상 끝 슬래시가 필요함 (307 리다이렉트 방지)
+    // RAG API의 특성상 슬래시 없으면 HTTP로 리다이렉트됨
+    // if (endpoint === "/qa" || endpoint.startsWith("/qa?")) {
+    //   endpoint = "/qa/";
+    // }
+    // // /prompts도 슬래시 필요 (HTTPS→HTTP 리다이렉트 방지)
+    // if (endpoint === "/prompts") {
+    //   endpoint = "/prompts/";
+    // }
 
     const url = `${RAG_API_URL}${endpoint}`;
 
@@ -60,11 +65,32 @@ async function handleRequest(
     const queryString = searchParams.toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
+    console.log("fullUrl", fullUrl);
+
     // 요청 헤더 준비 (토큰은 서버에서만!)
+    // 토큰 디버깅 - 실제 값 일부 확인
+    if (RAG_TOKEN) {
+      console.log("Token first 10 chars:", RAG_TOKEN.substring(0, 10));
+      console.log(
+        "Token last 10 chars:",
+        RAG_TOKEN.substring(RAG_TOKEN.length - 10)
+      );
+      console.log("Token length:", RAG_TOKEN.length);
+    }
+
     const headers: HeadersInit = {
       Authorization: `Bearer ${RAG_TOKEN}`,
     };
 
+    console.log("headers", headers);
+
+    // 실제 fetch 요청 디버깅
+    console.log("🚀 실제 요청 정보:", {
+      url: fullUrl,
+      method,
+      tokenValue: RAG_TOKEN, // 실제 토큰값 전체 확인
+      headerAuth: headers.Authorization,
+    });
     // Content-Type 처리
     const contentType = request.headers.get("content-type");
     if (contentType && !contentType.includes("multipart/form-data")) {

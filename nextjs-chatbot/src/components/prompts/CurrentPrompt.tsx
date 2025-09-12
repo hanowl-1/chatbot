@@ -24,16 +24,16 @@ export default function CurrentPrompt({
     PROMPTS_TABS.find((t) => t.id === activeTab)?.icon || FileText;
 
   // 프롬프트 초기화
-  const handleReset = () => {
+  const handleCancel = () => {
     setPrompts(originalPrompts);
   };
 
   // 기본값으로 복원
-  const handleRestoreDefault = () => {
-    if (confirm("기본 프롬프트로 복원하시겠습니까?")) {
-      setPrompts(DEFAULT_PROMPTS);
-    }
-  };
+  // const handleRestoreDefault = () => {
+  //   if (confirm("기본 프롬프트로 복원하시겠습니까?")) {
+  //     setPrompts(DEFAULT_PROMPTS);
+  //   }
+  // };
 
   return (
     <div className="space-y-4">
@@ -53,11 +53,14 @@ export default function CurrentPrompt({
       {/* 텍스트 에리어 */}
       <div>
         <textarea
-          value={prompts[activeTab as keyof Prompts]}
+          value={prompts[activeTab as keyof Prompts]?.text || ""}
           onChange={(e) =>
             setPrompts({
               ...prompts,
-              [activeTab]: e.target.value,
+              [activeTab]: {
+                ...prompts[activeTab as keyof Prompts],
+                text: e.target.value,
+              },
             })
           }
           className="w-full h-96 p-4 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -66,16 +69,14 @@ export default function CurrentPrompt({
           }을 입력하세요...`}
         />
         <div className="mt-2 text-right text-sm text-gray-500">
-          {typeof prompts[activeTab as keyof Prompts] === "string"
-            ? (prompts[activeTab as keyof Prompts] as string).length
-            : 0}
+          {prompts[activeTab as keyof Prompts]?.text?.length || 0}
           글자
         </div>
       </div>
 
       {/* 액션 버튼 */}
       <div className="flex justify-between items-center">
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <button
             onClick={handleRestoreDefault}
             className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-2"
@@ -83,11 +84,11 @@ export default function CurrentPrompt({
             <RotateCcw className="w-4 h-4" />
             기본값 복원
           </button>
-        </div>
+        </div> */}
         <div className="flex gap-2">
           {hasChanges && (
             <button
-              onClick={handleReset}
+              onClick={handleCancel}
               className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
             >
               변경 취소

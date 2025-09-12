@@ -20,7 +20,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
     setLoading(true);
     setServerBusy(false); // 재시도 시 초기화
     try {
-      const result = await fetchInstance(`/qa/?page=${page}&size=${size}`);
+      const result = await fetchInstance(`/qa?page=${page}&size=${size}`);
       if (result && result.data) {
         setQaList(result.data);
         setPagination(result.pagination);

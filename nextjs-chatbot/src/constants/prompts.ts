@@ -1,12 +1,14 @@
 import { RotateCcw, Sparkles, Shield, Brain } from "lucide-react";
 
-export const DEFAULT_PROMPTS = {
-  analyze_query: "",
-  refine_question: "",
-  generate_answer: "",
-  assess_confidence: "",
-  generate_final_answer: "",
-  system: "",
+import { Prompts } from "@/types/prompts";
+
+export const DEFAULT_PROMPTS: Prompts = {
+  // analyze_query: { text: "", lastModified: undefined, version: undefined },
+  refine_question: { text: "", lastModified: undefined, version: undefined },
+  generate_answer: { text: "", lastModified: undefined, version: undefined },
+  assess_confidence: { text: "", lastModified: undefined, version: undefined },
+  // generate_final_answer: { text: "", lastModified: undefined, version: undefined },
+  system: { text: "", lastModified: undefined, version: undefined },
 };
 
 export const PROMPTS_TABS = [
