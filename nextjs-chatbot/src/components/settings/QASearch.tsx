@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Sparkles, Plus } from "lucide-react";
 import { fetchInstance } from "@/lib/fetchInstance";
 import { QAItem, QASearchProps } from "@/types/qa";
-import { useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { promptsAtom } from "@/lib/atoms";
+import { useLoadPrompts } from "@/hooks/useLoadPrompts";
 
 export default function QASearch({
   onSearchComplete,
@@ -20,36 +21,9 @@ export default function QASearch({
     answer: string;
   } | null>(null);
   const [savingQA, setSavingQA] = useState(false);
-  const [prompts, setPrompts] = useAtom(promptsAtom);
 
-  // 컴포넌트 마운트 시 프롬프트 로드
-  useEffect(() => {
-    // 프롬프트가 비어있으면 로드
-    if (!prompts.generate_answer || !prompts.refine_question || !prompts.assess_confidence) {
-      fetchPrompts();
-    }
-  }, []);
-
-  const fetchPrompts = async () => {
-    try {
-      const response = await fetch("/api/prompts");
-      const data = await response.json();
-
-      if (data) {
-        setPrompts({
-          analyze_query: data.analyze_query || "",
-          refine_question: data.refine_question || "",
-          generate_answer: data.generate_answer || "",
-          assess_confidence: data.assess_confidence || "",
-          generate_final_answer: data.generate_final_answer || "",
-          system: data.system || "",
-        });
-        console.log("✅ QASearch: 프롬프트 로드 완료");
-      }
-    } catch (error) {
-      console.error("Failed to fetch prompts:", error);
-    }
-  };
+  useLoadPrompts(); // 초기 로드 처리
+  const prompts = useAtomValue(promptsAtom); // 읽기 전용으로 사용
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -83,10 +57,10 @@ export default function QASearch({
         method: "POST",
         body: JSON.stringify({
           question: searchQuery,
-          refine_question_prompt: prompts.refine_question,
-          generate_answer_prompt: prompts.generate_answer,
-          assess_confidence_prompt: prompts.assess_confidence,
-          system_prompt: prompts.system,
+          refine_question_prompt: prompts.refine_question.text,
+          generate_answer_prompt: prompts.generate_answer.text,
+          assess_confidence_prompt: prompts.assess_confidence.text,
+          system_prompt: prompts.system.text,
           model: "gemini-2.0-flash",
           embedding_count: 1,
           scope: "generate_answer",

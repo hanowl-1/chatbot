@@ -43,10 +43,12 @@ export default function QAList({ refreshTrigger }: QAListProps) {
       setLoading(false);
     }
   };
-  const fetchVectorStatus = async () => {
-    const result = await fetchInstance(`/qa/vector-status`);
-    console.log("result", result);
-  };
+
+  //  벡터 상태 확인 필요 할 경우 사용
+  // const fetchVectorStatus = async () => {
+  //   const result = await fetchInstance(`/qa/vector-status`);
+  //   console.log("result", result);
+  // };
 
   const handleDelete = async (id: number) => {
     if (!confirm("정말로 이 QA를 삭제하시겠습니까?")) return;
@@ -138,14 +140,9 @@ export default function QAList({ refreshTrigger }: QAListProps) {
     }, 300000); // 5분 후 종료
   };
 
-  // const refreshQAList = async () => {
-  //   await fetchQAList(1);
-  //   await handleSync();
-  // };
-
-  useEffect(() => {
-    fetchVectorStatus();
-  }, []);
+  // useEffect(() => {
+  //   fetchVectorStatus();
+  // }, []);
 
   useEffect(() => {
     fetchQAList(1);

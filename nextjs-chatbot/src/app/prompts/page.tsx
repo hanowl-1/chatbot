@@ -3,73 +3,31 @@
 import { useState, useEffect } from "react";
 import { FileText } from "lucide-react";
 import { Prompts } from "@/types/prompts";
-import Loading from "@/components/common/Loading";
 import CurrentPrompt from "@/components/prompts/CurrentPrompt";
-import { DEFAULT_PROMPTS, PROMPTS_TABS } from "@/constants/prompts";
+import { PROMPTS_TABS } from "@/constants/prompts";
 import { fetchInstance } from "@/lib/fetchInstance";
+import { useAtom } from "jotai";
+import { promptsAtom } from "@/lib/atoms";
+import { useLoadPrompts } from "@/hooks/useLoadPrompts";
 
 export default function PromptsPage() {
-  const [prompts, setPrompts] = useState<Prompts>(DEFAULT_PROMPTS);
+  useLoadPrompts(); // 초기 로드 처리
+  const [prompts, setPrompts] = useAtom(promptsAtom); // 전역 상태 읽기/쓰기
 
-  const [originalPrompts, setOriginalPrompts] =
-    useState<Prompts>(DEFAULT_PROMPTS);
+  const [editingPrompts, setEditingPrompts] = useState<Prompts>(prompts);
+  const [originalPrompts, setOriginalPrompts] = useState<Prompts>(prompts);
 
   const [activeTab, setActiveTab] = useState<keyof Prompts>("system");
-  const [loading, setLoading] = useState(false);
+
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
 
-  // 프롬프트 불러오기
+  // 전역 상태가 변경되면 로컬 상태도 업데이트
   useEffect(() => {
-    fetchPrompts();
-  }, []);
-
-  const fetchPrompts = async () => {
-    setLoading(true);
-    try {
-      const data = await fetchInstance("/prompts");
-      // API에서 받은 프롬프트 설정
-      if (data && Array.isArray(data)) {
-        // 배열을 prompt_type으로 매핑
-        const promptMap = data.reduce((acc, item) => {
-          acc[item.prompt_type] = item;
-          return acc;
-        }, {} as any);
-
-        const newPrompts = {
-          generate_answer: {
-            text: promptMap.answer_generation?.prompt_text || "",
-            lastModified: promptMap.answer_generation?.last_modified,
-            version: promptMap.answer_generation?.version,
-          },
-          assess_confidence: {
-            text: promptMap.confidence_check?.prompt_text || "",
-            lastModified: promptMap.confidence_check?.last_modified,
-            version: promptMap.confidence_check?.version,
-          },
-          refine_question: {
-            text: promptMap.refine_question?.prompt_text || "",
-            lastModified: promptMap.refine_question?.last_modified,
-            version: promptMap.refine_question?.version,
-          },
-          system: {
-            text: promptMap.system?.prompt_text || "",
-            lastModified: promptMap.system?.last_modified,
-            version: promptMap.system?.version,
-          },
-        };
-        setPrompts(newPrompts);
-        setOriginalPrompts(newPrompts);
-      }
-    } catch (error) {
-      console.error("Failed to fetch prompts:", error);
-      setPrompts(DEFAULT_PROMPTS);
-      setOriginalPrompts(DEFAULT_PROMPTS);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setEditingPrompts(prompts);
+    setOriginalPrompts(prompts);
+  }, [prompts]);
 
   // 프롬프트 저장
   const handleSave = async () => {
@@ -87,21 +45,23 @@ export default function PromptsPage() {
         method: "PATCH",
         body: JSON.stringify({
           prompt_type: typeMapping[activeTab] || activeTab,
-          prompt_text: prompts[activeTab].text,
+          prompt_text: editingPrompts[activeTab].text,
         }),
       });
 
       // 응답에서 업데이트된 메타데이터 반영
       if (result) {
         const updatedPrompts = {
-          ...prompts,
+          ...editingPrompts,
           [activeTab]: {
-            ...prompts[activeTab],
+            ...editingPrompts[activeTab],
             lastModified: result.last_modified,
             version: result.version,
           },
         };
+        // 전역 상태 업데이트!
         setPrompts(updatedPrompts);
+        setEditingPrompts(updatedPrompts);
         setOriginalPrompts(updatedPrompts);
       }
 
@@ -128,16 +88,16 @@ export default function PromptsPage() {
               각 LLM 단계별 프롬프트를 관리하고 최적화하세요
             </p>
           </div>
-          {prompts[activeTab] && (
+          {editingPrompts[activeTab] && (
             <div className="text-sm text-gray-500">
-              {prompts[activeTab].version &&
-                `버전: ${prompts[activeTab].version}`}
-              {prompts[activeTab].version &&
-                prompts[activeTab].lastModified &&
+              {editingPrompts[activeTab].version &&
+                `버전: ${editingPrompts[activeTab].version}`}
+              {editingPrompts[activeTab].version &&
+                editingPrompts[activeTab].lastModified &&
                 " | "}
-              {prompts[activeTab].lastModified &&
+              {editingPrompts[activeTab].lastModified &&
                 `수정일: ${new Date(
-                  prompts[activeTab].lastModified
+                  editingPrompts[activeTab].lastModified
                 ).toLocaleDateString("ko-KR")}`}
             </div>
           )}
@@ -169,18 +129,14 @@ export default function PromptsPage() {
 
       {/* 프롬프트 에디터 */}
       <div className="p-6">
-        {loading ? (
-          <Loading size="lg" text="프롬프트 불러오는 중..." className="py-12" />
-        ) : (
-          <CurrentPrompt
-            activeTab={activeTab}
-            prompts={prompts}
-            originalPrompts={originalPrompts}
-            saveStatus={saveStatus}
-            setPrompts={setPrompts}
-            savePrompts={handleSave}
-          />
-        )}
+        <CurrentPrompt
+          activeTab={activeTab}
+          prompts={editingPrompts}
+          originalPrompts={originalPrompts}
+          saveStatus={saveStatus}
+          setPrompts={setEditingPrompts}
+          savePrompts={handleSave}
+        />
       </div>
     </div>
   );

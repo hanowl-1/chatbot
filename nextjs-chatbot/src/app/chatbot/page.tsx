@@ -9,8 +9,9 @@ import {
 } from "@/components/chatbot/PipelineVisualization";
 import { MODELS } from "@/constants/model";
 import { Message } from "@/types/chat";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { chatMessagesAtom, promptsAtom } from "@/lib/atoms";
+import { useLoadPrompts } from "@/hooks/useLoadPrompts";
 
 export default function ChatbotPage() {
   const [input, setInput] = useState("");
@@ -19,7 +20,9 @@ export default function ChatbotPage() {
     PIPELINE_OPTIONS[0].value
   );
   const [loading, setLoading] = useState(false);
-  const [prompts, setPrompts] = useAtom(promptsAtom);
+
+  useLoadPrompts(); // 초기 로드 처리
+  const prompts = useAtomValue(promptsAtom); // 읽기 전용으로 사용
 
   const [messages, setMessages] = useAtom(chatMessagesAtom);
 
@@ -29,36 +32,9 @@ export default function ChatbotPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // 프롬프트 가져오기
-  useEffect(() => {
-    fetchPrompts();
-  }, []);
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const fetchPrompts = async () => {
-    try {
-      const response = await fetch("/api/prompts");
-      const data = await response.json();
-
-      if (data) {
-        setPrompts({
-          // analyze_query: data.analyze_query || "",
-          analyze_query: "",
-          refine_question: data.refine_question || "",
-          generate_answer: data.generate_answer || "",
-          assess_confidence: data.assess_confidence || "",
-          // generate_final_answer: data.generate_final_answer || "",
-          generate_final_answer: "",
-          system: data.system || "",
-        });
-      }
-    } catch (error) {
-      console.error("Failed to fetch prompts:", error);
-    }
-  };
 
   // 파이프라인 실행
   const handleSend = async () => {
@@ -81,11 +57,11 @@ export default function ChatbotPage() {
         question: input,
         embedding_count: 3,
         // analyze_query_prompt: prompts.analyze_query,
-        refine_question_prompt: prompts.refine_question,
-        generate_answer_prompt: prompts.generate_answer,
-        assess_confidence_prompt: prompts.assess_confidence,
+        refine_question_prompt: prompts.refine_question.text,
+        generate_answer_prompt: prompts.generate_answer.text,
+        assess_confidence_prompt: prompts.assess_confidence.text,
         // generate_final_answer_prompt: prompts.generate_final_answer,
-        system_prompt: prompts.system,
+        system_prompt: prompts.system.text,
         model: selectedModel,
       };
 
