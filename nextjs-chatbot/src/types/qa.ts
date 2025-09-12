@@ -1,5 +1,6 @@
 export interface QAItem {
-  qa_id: number;
+  id?: number;
+  qa_id?: number;
   question: string;
   answer: string;
   similarity_score: number;

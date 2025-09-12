@@ -201,7 +201,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
               </p>
               <div className="max-h-60 overflow-y-auto space-y-2 opacity-50">
                 {qaList.map((item) => (
-                  <div key={item.qa_id} className="p-2 border rounded text-sm">
+                  <div key={item.id} className="p-2 border rounded text-sm">
                     <p className="text-gray-600">Q: {item.question}</p>
                   </div>
                 ))}
@@ -213,7 +213,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
         <div className="max-h-96 overflow-y-auto space-y-2">
           {qaList.map((item) => (
             <div
-              key={item.qa_id}
+              key={item.id}
               className="p-3 border rounded-lg hover:bg-gray-50 relative group"
             >
               <div className="pr-8">
@@ -222,7 +222,7 @@ export default function QAList({ refreshTrigger }: QAListProps) {
                     Q: {item.question}
                   </p>
                   <span className="text-xs text-blue-600 font-semibold ml-2">
-                    qa_id: {item.qa_id}
+                    qa_id: {item.id}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">A: {item.answer}</p>
@@ -234,12 +234,12 @@ export default function QAList({ refreshTrigger }: QAListProps) {
                 )}
               </div>
               <button
-                onClick={() => handleDelete(item.qa_id)}
-                disabled={deletingId === item.qa_id}
+                onClick={() => handleDelete(item.id!)}
+                disabled={deletingId === item.id}
                 className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
                 title="삭제"
               >
-                {deletingId === item.qa_id ? (
+                {deletingId === item.id ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500" />
                 ) : (
                   <Trash2 className="w-4 h-4" />
