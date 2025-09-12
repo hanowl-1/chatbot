@@ -12,17 +12,11 @@ const navItems = [
   { href: "/reviews", label: "검증 대기", icon: AlertTriangle },
 ];
 
-export default function Navigation() {
+export default function HeaderNavigation() {
   const pathname = usePathname();
 
   return (
     <>
-      <header className="bg-blue-600 text-white">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold">슈퍼멤버스 챗봇 콘솔</h1>
-        </div>
-      </header>
-
       <nav className="bg-white border-b">
         <div className="container mx-auto px-4">
           <div className="flex space-x-1">

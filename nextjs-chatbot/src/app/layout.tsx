@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navigation from "./layout/Navigation";
+import Navigation from "../components/layout/Navigation";
+import Header from "../components/layout/Header";
 import { Provider } from "jotai";
 import { Toaster } from "react-hot-toast";
 
@@ -22,25 +23,26 @@ export default function RootLayout({
       <body className={inter.className}>
         <Provider>
           <div className="min-h-screen bg-gray-50">
+            <Header />
             <Navigation />
             <main className="container mx-auto px-4 py-8">{children}</main>
           </div>
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#333',
-                color: '#fff',
+                background: "#333",
+                color: "#fff",
               },
               success: {
                 style: {
-                  background: '#10b981',
+                  background: "#10b981",
                 },
               },
               error: {
                 style: {
-                  background: '#ef4444',
+                  background: "#ef4444",
                 },
               },
             }}
