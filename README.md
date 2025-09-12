@@ -18,6 +18,7 @@
 - 시스템 프롬프트 실시간 편집
 - 버전 관리 및 히스토리
 - 웹 UI를 통한 간편한 수정
+- **Jotai 전역 상태 관리**: 한 번만 로드하여 모든 페이지에서 공유
 
 ### 4. 비용 분석
 - 모델별 토큰 사용량 추적
@@ -154,7 +155,7 @@ chatbot/
 ├── nextjs-chatbot/           # Next.js 프로젝트
 │   ├── src/
 │   │   ├── app/             # App Router 페이지
-│   │   │   ├── api/         # API 라우트
+│   │   │   ├── api/         # API 라우트 (prompts 제거됨)
 │   │   │   ├── chatbot/    # 챗봇 테스트 페이지
 │   │   │   ├── prompts/    # 프롬프트 관리 페이지
 │   │   │   ├── reviews/    # 리뷰 관리 페이지
@@ -163,9 +164,10 @@ chatbot/
 │   │   │   ├── common/      # 공통 컴포넌트
 │   │   │   └── reviews/     # 리뷰 관련 컴포넌트
 │   │   ├── lib/             # 유틸리티 및 설정
-│   │   │   ├── atoms/       # Jotai 상태 관리
+│   │   │   ├── atoms/       # Jotai 전역 상태 관리
 │   │   │   └── supabase.ts  # Supabase 클라이언트
 │   │   ├── hooks/           # 커스텀 React 훅
+│   │   │   └── useLoadPrompts.ts # 프롬프트 로드 훅
 │   │   ├── types/           # TypeScript 타입 정의
 │   │   └── constants/       # 상수 정의
 │   ├── data/                # 로컬 데이터 저장
